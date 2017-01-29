@@ -22,8 +22,8 @@ With **Technology radar builder** you can easly create custom radars with diffre
 ### Screenshots
 
 #### Task List - why not ?:)
-![](img\1.png)
+![](https://github.com/pszyller/tech-radar-builder/blob/master/img/1.png)
 
 #### Technologies in 3 slices
-![](img\2.png)
+![](https://github.com/pszyller/tech-radar-builder/blob/master/img/2.png)
 
