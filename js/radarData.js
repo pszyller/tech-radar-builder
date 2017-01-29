@@ -2,11 +2,11 @@
 var radarDefinition = 
 {
   "config": {
-    "title": "BC Application Development Tech-Radar",
+    "title": "Tech Radar",
     "updateDate": "2017-01-05",
-    "contact": "pawel.szyller@britishcouncil.pl",
+    "contact": "pszyller@gmail.com",
     "slices": [
-      "Tools",
+      "Tools/Technologies",
       "Languages",
       "Practices",
     ],
