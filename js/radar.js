@@ -3,9 +3,10 @@ class TechRadar {
     
   constructor() {
           this.s =  Snap('#radar'); 
-     this.radarAnimation = true;
-     this.t = this.s.text(10,10, "text");
-         this.updateListeners = [];
+          this.radarAnimation = true;
+          this.t = this.s.text(10,10, "text");
+     
+       this.updateListeners = [];
        this.colors = 
 [
     '#ffffff',
@@ -17,6 +18,9 @@ class TechRadar {
 
  this.create(1000, radarDefinition);
    this.radarAnimation = false;
+
+   
+        
   }
 
   addUpdateListener(fn)
@@ -30,6 +34,7 @@ class TechRadar {
     this.map = {};
     this.data = radarDef;
     this.canvasSize = size;
+    this.radius = this.canvasSize / 2.5;
     this.centre = this.canvasSize/2;
     this.init();
   }
@@ -168,9 +173,7 @@ init()
 var slicesLength = radarDefinition.config.slices.length;
 var stagesLength = radarDefinition.config.stages.length;
 var _this = this;
-var radius = this.canvasSize / 2.5;
-var ringWidth = radius/stagesLength;
-var shift = ringWidth/2;
+
 var current = null;
 this.map = {};
 
@@ -184,9 +187,7 @@ this.map = {};
              "font-size": "15px",
              "text-anchor":"start" });
 
-
-
- this.drawRing(slicesLength, radius+(20), 35, function(sliceIndex, elem)
+ this.drawRing(slicesLength, _this.radius+(20), 35, function(sliceIndex, elem)
     {
        var l = elem.getTotalLength();
         var t1 = _this.s.paper.text(l/2, 0, _this.data.config.slices[sliceIndex]).attr(
@@ -196,18 +197,24 @@ this.map = {};
              "text-anchor":"middle" });
     }, "#DDDDDD");
 
+
+var rSum= 0;
 for(var i=0;i<stagesLength;i++)
 {
-    this.drawRing(slicesLength, radius-(i*ringWidth)-shift, ringWidth, function(sliceIndex, elem)
+      _this.radius = this.canvasSize / 2.5;
+var ringWidth = _this.radius * _this.data.config.stages[i].scale;
+var shift = ringWidth/2;
+
+    this.drawRing(slicesLength, _this.radius-(rSum)-shift, ringWidth, function(sliceIndex, elem)
     {
         //oncreated
 
         var slice = radarDefinition.config.slices[sliceIndex];
         var key = radarDefinition.config.slices[sliceIndex] + '|' + radarDefinition.config.stages[i];
-        var stagei = radarDefinition.config.stages[i];
+        var stagei = radarDefinition.config.stages[i].name;
      
         var l = elem.getTotalLength();
-        var t1 = _this.s.paper.text(l/2, 0, _this.data.config.stages[i]).attr(
+        var t1 = _this.s.paper.text(l/2, 0, _this.data.config.stages[i].name).attr(
             {textpath: elem,
             'fill' : '#EEEEEE',  'stroke': '#EEEEEE', 'stroke-width': 0.2,
              "font-size": "20px",
@@ -219,16 +226,6 @@ for(var i=0;i<stagesLength;i++)
             current = _this.map[key];
             current.attr( { 'origStroke': current.attr('stroke') } );
             
-            //    Snap.animate(0, 100,   function (val) {
-
-            //     current.attr({ 
-            //         "stroke": '#eeeeee',
-            //         'stroke-opacity': (val/100)
-            //     });
-
-            //   }, 3000, mina.linear);
-
-
             //_this.write(key);
             if(_this.dr && _this.dr.attr('display') == "none")
             {
@@ -263,31 +260,48 @@ for(var i=0;i<stagesLength;i++)
                       sliceElem.data.splice(existing, 1);
                     }
                 });
+                
+                var dx = _this.centre - newItem.x;
+                var dy = _this.centre - newItem.y;
+                if(Math.sqrt(dx*dx+dy*dy) <= _this.radius)
+                  {
+                    slice.data.push(newItem);
+                  }
+                    _this.dr.attr({ display : "" });
+                        _this.updateListeners.forEach(function(fn){
+                        fn(_this.data);
+                        });
 
-                slice.data.push(newItem);
-                _this.dr.attr({ display : "" });
-                _this.updateListeners.forEach(function(fn){
-                fn(_this.data);
-                });
+                    Snap.animate(255, 240, function (val) { elem.attr({"stroke": 'rgb('+val+','+val+','+val+')' })}, 300, mina.linear,
+                    function()
+                    {
+                    Snap.animate(240, 255, function (val) { elem.attr({"stroke": 'rgb('+val+','+val+','+val+')' })}, 300, mina.linear,
+                    function()
+                    {
+                        _this.create(1000, _this.data);
+                    });
+                    }
+                    );
 
-             
-                _this.create(1000, _this.data);
             }          
 
         },function()
         {
             current = _this.map[key];
-            current.attr( { stroke: '#ffffff' } );
             
+            
+
        //     current.attr({ stroke: '#ff0000'});
         });
         _this.map[key] = elem;
     });
+
+    rSum+= ringWidth;
 }
 
 for(var i=0;i<slicesLength; i++)
 {
-    var line = this.s.paper.line(this.centre, this.centre, this.centre, this.centre - radius).attr({strokeWidth:1,stroke:"#cccccc",strokeLinecap:"round"});
+    var line = this.s.paper.line(this.centre, this.centre, this.centre, this.centre - _this.radius).attr({strokeWidth:1,stroke:"#cccccc",strokeLinecap:"round"});
     line.transform('r' + (360/slicesLength*i) + ',' + this.centre + ',' + this.centre);
 }
 

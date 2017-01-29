@@ -11,10 +11,10 @@ var radarDefinition =
       "Practices",
     ],
     "stages": [
-      "On Hold",
-      "Assess",
-      "Trial",
-      "Adopted"
+      { name: "On Hold", scale: 0.1 },
+      { name: "Assess",scale: 0.4 },
+      { name: "Trial",scale: 0.1 },
+      { name: "Adopted",scale: 0.4 },
     ]
   },
   "data": [
