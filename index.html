@@ -1,0 +1,53 @@
+<!doctype html>
+<html lang="en">
+
+	<head>
+		<meta charset="utf-8">
+	   
+		<style>
+			body{
+				margin: 0;
+				padding: 0;
+				background: #00ecff;
+			
+			}
+
+            div#container {
+  height: 1000px;
+  width: 1000px;
+  border:2px solid #000;
+
+ }
+			
+
+		</style>
+	</head>	
+	<body>
+        <div></div>
+        <div id='container'>
+        <div style="position:absolute">
+            Name <input id='newElemName' type="text"  /> 
+            <input type="button" value="Add" onclick="techRadar.add(document.getElementById('newElemName').value, 100,100)" />
+        </div>
+        <svg id="radar" width="1000px" height="1000px" viewBox="0,0,1000,1000" ><desc>Created with Snap</desc>
+        </svg>
+        </div>
+        <div style="height:1000px">
+        <textarea id='jsonout' >
+            
+        </textarea>
+        </div>
+        </div>
+        <script src="js/lodash.min.js"></script>
+		<script src="js/snap.svg-min.js"></script>
+        <script src="js/radarData.js"></script>
+		<script src="js/radar.js"></script>
+        <script>
+            var techRadar = new TechRadar();
+            techRadar.addUpdateListener(function(obj)
+            {
+                document.getElementById('jsonout').value = JSON.stringify(obj, undefined, 2);
+            });
+        </script>
+	</body>
+</html>
