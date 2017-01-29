@@ -14,19 +14,19 @@ With **Technology radar builder** you can easly create custom radars with diffre
 - Custom number of slices
 - Custom number of stages
 - Easy radar items adding/removing
-- Easy items moving (drag-n-trop)
+- Easy items moving (drag-n-drop)
 - Data stored in json
-- [todo] Configurable stage ring size (in percentage)
+- Configurable stage/ring size (percentage)
 - [todo] Zoomable/scalable
 - [todo] History
 
-### 3. [Live Preview](http://tech-radar-builder.azurewebsites.net/)
+### 3. [Live Preview](https://pszyller.github.io/tech-radar-builder)
 
 ### 4. Screenshots
 
 #### Task List - why not ?:)
-![](https://github.com/pszyller/tech-radar-builder/blob/master/img/1.png)
+![](https://pszyller.github.io/tech-radar-builder/img/1.png)
 
 #### Technologies in 3 slices
-![](https://github.com/pszyller/tech-radar-builder/blob/master/img/2.png)
+![](https://pszyller.github.io/tech-radar-builder/img/2.png)
 
