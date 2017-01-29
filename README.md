@@ -16,7 +16,7 @@ With **Technology radar builder** you can easly create custom radars with diffre
 - Easy radar items adding/removing
 - Easy items moving (drag-n-trop)
 - Data stored in json
-- Configurable stage ring size (in percentage)
+- [todo] Configurable stage ring size (in percentage)
 - [todo] Zoomable/scalable
 - [todo] History
 
