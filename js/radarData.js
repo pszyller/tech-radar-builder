@@ -2,19 +2,31 @@
 var radarDefinition = 
 {
   "config": {
-    "title": "Tech Radar",
+    "title": "APPLICATION DEVELOPMENT RADAR",
     "updateDate": "2017-01-05",
     "contact": "pszyller@gmail.com",
     "slices": [
       "Tools/Technologies",
       "Languages",
-      "Practices",
+      "Practices"
     ],
     "stages": [
-      { name: "On Hold", scale: 0.1 },
-      { name: "Assess",scale: 0.4 },
-      { name: "Trial",scale: 0.1 },
-      { name: "Adopted",scale: 0.4 },
+      {
+        "name": "On Hold",
+        "scale": 0.1
+      },
+      {
+        "name": "Assess",
+        "scale": 0.4
+      },
+      {
+        "name": "Trial",
+        "scale": 0.1
+      },
+      {
+        "name": "Adopted",
+        "scale": 0.4
+      }
     ]
   },
   "data": [
@@ -23,24 +35,29 @@ var radarDefinition =
       "data": [
         {
           "title": "C#",
-          "desc": "Rest web services",
-          "stage": "On Hold",
-          "x": 396,
-          "y": 208
+          "desc": "",
+          "stage": "Assess",
+          "x": 1051,
+          "y": 275
+        }
+      ]
+    },
+    {
+      "slice": "Tools/Technologies",
+      "data": [
+        {
+          "title": "PowerShell",
+          "desc": "",
+          "stage": "Assess",
+          "x": 1051,
+          "y": 184
         },
         {
           "title": "TypeScript",
-          "desc": "Rest web services",
+          "desc": "",
           "stage": "Trial",
-          "x": 432,
-          "y": 317
-        },
-        {
-          "title": "PowerShell",
-          "desc": "Rest web services",
-          "stage": "On Hold",
-          "x": 467,
-          "y": 195
+          "x": 1069,
+          "y": 386
         }
       ]
     }
