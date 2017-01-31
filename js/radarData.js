@@ -42,49 +42,49 @@ var radarDefinition =
         },
         {
           "title": "Coding Policies",
-          "desc": "",
+          "desc": "Indroducing common Coding Policies helps to keep good practices and quality level across many projects. It's not to kill developers creativness but to control distributed system evolution.",
           "stage": "Adopted",
           "x": 820,
           "y": 602
         },
         {
           "title": "Shared Components",
-          "desc": "",
+          "desc": "Npm and Nuget packages to share code between many apps.",
           "stage": "Adopted",
           "x": 846,
           "y": 572
         },
         {
           "title": "Seed Applications",
-          "desc": "",
+          "desc": "Frontend and Backend seed applications are used to create new application base. Seeds contains applications skeleton and most important integrations (like security)",
           "stage": "Adopted",
           "x": 901,
           "y": 497
         },
         {
           "title": "Common Branching Strategy",
-          "desc": "",
+          "desc": "Set of rules regarding version control branches used across all the projects. Naming conventions, branching, merging, releasing rules.",
           "stage": "Adopted",
           "x": 881,
           "y": 453
         },
         {
           "title": "Pull Requests",
-          "desc": "",
+          "desc": "Increases quality by code reviews and helps to controll production code.",
           "stage": "Adopted",
           "x": 837,
           "y": 539
         },
         {
           "title": "Pair Programming",
-          "desc": "",
+          "desc": "We focus on team work. Pair Programming increases our problem solving skills and create better automated tests.",
           "stage": "Adopted",
           "x": 840,
           "y": 519
         },
         {
           "title": "SQL Scripts Static Analysis",
-          "desc": "",
+          "desc": "To check SQL scripts agains security and other rules before they will be executed on database.",
           "stage": "Assess",
           "x": 761,
           "y": 317
