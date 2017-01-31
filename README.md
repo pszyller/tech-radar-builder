@@ -9,7 +9,7 @@ With **Technology radar builder** you can easly create custom radars with diffre
 - JavaScript
 - SVG ([Snap svg](http://snapsvg.io/))
 
-### 2. Functionality
+### 2. Features
 
 - Custom number of slices
 - Custom number of stages

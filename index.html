@@ -12,8 +12,9 @@
 			}
 
             div#container {
-  height: 1000px;
-  width: 1000px;
+  height: 2000px;
+  width: 2000px;
+  border: 1px solid;
   }
 		</style>
 	</head>	
@@ -22,9 +23,9 @@
         <div id='container' style="float:left">
         <div style="position:absolute">
             Name <input id='newElemName' type="text"  /> 
-            <input type="button" value="Add" onclick="techRadar.add(document.getElementById('newElemName').value, 100,100)" />
+            <input type="button" value="Add" onclick="techRadar.add(document.getElementById('newElemName').value, 600,100)" />
         </div>
-        <svg id="radar" width="1000px" height="1000px" viewBox="0,0,1000,1000" ><desc>Created with Snap</desc>
+        <svg id="radar" width="2000px" height="2000px" viewBox="0,0,2000,2000" ><desc>Created with Snap</desc>
        
         </svg>
         </div>
@@ -39,7 +40,7 @@
         <script src="js/radarData.js"></script>
 		<script src="js/radar.js"></script>
         <script>
-            var techRadar = new TechRadar();
+            var techRadar = new TechRadar(radarDefinition);
             techRadar.addUpdateListener(function(obj)
             {
                 document.getElementById('jsonout').value = JSON.stringify(obj, undefined, 2);
