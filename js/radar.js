@@ -1,8 +1,44 @@
+  Snap.plugin(function (Snap, Element, Paper, glob) {
+     Paper.prototype.multitext = function (x, y, txt, max_width, attributes) {
+
+        var svg = Snap();
+        var abc = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ";
+        var temp = svg.text(0, 0, abc);
+        temp.attr(attributes);
+        var letter_width = temp.getBBox().width / abc.length;
+        svg.remove();
+
+        var words = txt.split(" ");
+        var width_so_far = 0, current_line=0, lines=[''];
+        for (var i = 0; i < words.length; i++) {
+
+           var l = words[i].length;
+           if (width_so_far + (l * letter_width) > max_width) {
+              lines.push('');
+              current_line++;
+              width_so_far = 0;
+           }
+           width_so_far += l * letter_width;
+           lines[current_line] += words[i] + " ";
+        }
+
+        var t = this.text(x,y,lines).attr(attributes);
+        t.selectAll("tspan:nth-child(n+2)").attr({
+           dy: "1.2em",
+           x: x
+        });
+        return t;
+     };
+  });
+
+
+
 
 class TechRadar {
 
     constructor(radarData) {
         this.s = Snap('#radar');
+   
         this.radarAnimation = true;
         this.t = this.s.text(10, 10, "text");
         this.updateListeners = [];
@@ -76,7 +112,8 @@ class TechRadar {
             stroke: "#050505",
             strokeWidth: 1
         });
-        var ct = this.s.text(0 + 10, 5, name);
+         
+        var ct = this.s.multitext(10, 5, name, 150, { "font-size": "15px" });
         var g = this.s.g();
         if (!_this.radarAnimation)
             g.transform('t' + x + ',' + y);
@@ -153,7 +190,7 @@ class TechRadar {
     }
 
     drawRing(parts, radius, width, oncreated, color) {
-        var rot = 360 / parts;
+        var rot = (360 / parts) % 360;
         for (var i = 0; i < parts; i++) {
             var c2 = this.draw(1 / parts, radius, color || this.colors[i], width);
             c2.transform('r' + (rot * i) + ',' + this.centre.x + ',' + this.centre.y);
@@ -172,27 +209,25 @@ class TechRadar {
         var _this = this;
         var bullet = { x: 50, y: 120 };
         var gr = this.s.g();
-        gr.add(this.s.rect(25,80, 400,500,10)).attr(
-            {
-                "fill" : "white"
-            });
+        // gr.add(this.s.rect(25,80, 400,500,10)).attr(
+        //     {
+        //         "fill" : "white"
+        //     });
         _.forEach(_.sortBy(this.data.data, function(c)
         {
             return c.slice;
         }), function (slice) {
+            
+            var ind = _.findIndex(_this.data.config.slices, function (e) { return e == slice.slice });
+            bullet.col = _this.cols[ind];
+            bullet.y += 30;
+
             _this.s.text(bullet.x, bullet.y, slice.slice.toUpperCase()).attr({
-                'fill': '#000000', 'stroke': '#000000', 'stroke-width': 1.0,
+                'fill':  bullet.col, 'stroke': '#000000', 'stroke-width': 1.0,
                 "font-size": "20px",
                 "font-family" : "Super Sans"
             });
 
-            var ind = _.findIndex(_this.data.config.slices, function (e) 
-            {
-                 return e == slice.slice 
-                });
-
-            bullet.col = _this.cols[ind];
-            bullet.y += 30;
             var currentStage = { name: ''};
             _.forEach(_.sortBy(slice.data, function(c)
             {
@@ -205,9 +240,10 @@ class TechRadar {
                 if(currentStage.name != stage.stage)
                 {
                   currentStage.name = stage.stage;
-                  _this.s.text(bullet.x +30, bullet.y + 5,stage.stage.toUpperCase()).attr(
+                  bullet.y += 30;
+                  _this.s.text(bullet.x + 5, bullet.y + 5,stage.stage.toUpperCase()).attr(
                       {
-                          "font-family" : "Super Sans",
+                        'font-family' : "Super Sans",
                         'fill': '#000000', 'stroke': '#000000', 'stroke-width': 1.0,
                       });
                   bullet.y += 30;
@@ -227,11 +263,22 @@ class TechRadar {
                     strokeWidth: 1
                 });
 
-                _this.s.text(bullet.x +20, bullet.y + 5, stage.title + (stage.desc ? ' - ' : '') + stage.desc).attr(
-                    {
-                           "font-family" : "Super Sans"
-                    });
-                bullet.y += 30;
+                var title = _this.s.text(bullet.x +20, bullet.y + 5, stage.title).attr( 
+                {
+                      fill: bullet.col,
+                     "font-size": "15px",
+                });
+
+                var desc = _this.s.multitext(bullet.x +20, bullet.y + 5, stage.title + ' ' + (stage.desc ? ' - ' + stage.desc : '') , 450, 
+                {
+                     "font-size": "15px",
+                });
+
+                // _this.s.text(bullet.x +20, bullet.y + 5, stage.title + (stage.desc ? ' - ' : '') + stage.desc).attr(
+                //     {
+                //            "font-family" : "Super Sans"
+                //     });
+                bullet.y += desc.node.clientHeight + 5;
                 //       var rect = this.s.rect(this.centre - this.radius, this.centre + this.radius, 100,100)
                 // .attr({strokeWidth:3});
             });
@@ -250,25 +297,25 @@ class TechRadar {
         var current = null;
         this.map = {};
 
-        var title = _this.s.paper.text(10, 70, _this.data.config.title.toUpperCase()).attr(
+        var title = _this.s.paper.text(this.centre.x, 50, _this.data.config.title.toUpperCase()).attr(
             {
                 'fill': '#000000', 'stroke': '#000000', 'stroke-width': 0.5,
                 "font-size": "25px",
-                "font-family" : "Super Sans"
-
+                "font-family" : "Super Sans",
+                  "text-anchor": "middle",
             });
 
-        _this.s.paper.text(800, 15, 'contact: ' + _this.data.config.contact).attr(
-            {
-                'fill': '#000000', 'stroke': '#000000', 'stroke-width': 0.2,
-                "font-size": "15px",
-                "text-anchor": "start",
-                "font-family" : "Super Sans Bold"
-            });
+        // _this.s.paper.text(800, 15, 'contact: ' + _this.data.config.contact).attr(
+        //     {
+        //         'fill': '#000000', 'stroke': '#000000', 'stroke-width': 0.2,
+        //         "font-size": "15px",
+        //         "text-anchor": "start",
+        //         "font-family" : "Super Sans Bold"
+        //     });
 
         this.drawRing(slicesLength, _this.radius + (20), 35, function (sliceIndex, elem) {
             var l = elem.getTotalLength();
-            var t1 = _this.s.paper.text(l / 2, 0, _this.data.config.slices[sliceIndex]).attr(
+            var t1 = _this.s.paper.text(l / 2, 0, _this.data.config.slices[sliceIndex].toUpperCase()).attr(
                 {
                     textpath: elem,
                     'fill': '#000000', 'stroke': '#000000', 'stroke-width': 0.2,
@@ -277,7 +324,6 @@ class TechRadar {
                     "font-family" : "Super Sans"
                 });
         }, "#DDDDDD");
-
 
         var rSum = 0;
         for (var i = 0; i < stagesLength; i++) {
