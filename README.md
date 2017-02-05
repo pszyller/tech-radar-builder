@@ -1,32 +1,31 @@
-# tech-radar-builder
+# TechRadarBuilder
 
-### Indroduction
+This project was generated with [angular-cli](https://github.com/angular/angular-cli) version 1.0.0-beta.28.3.
 
-With **Technology radar builder** you can easly create custom radars with diffrent number of slices and stages. 
+## Development server
+Run `ng serve` for a dev server. Navigate to `http://localhost:4200/`. The app will automatically reload if you change any of the source files.
 
-### 1. Stack
+## Code scaffolding
 
-- JavaScript
-- SVG ([Snap svg](http://snapsvg.io/))
+Run `ng generate component component-name` to generate a new component. You can also use `ng generate directive/pipe/service/class/module`.
 
-### 2. Features
+## Build
 
-- Custom number of slices
-- Custom number of stages
-- Easy radar items adding/removing
-- Easy items moving (drag-n-drop)
-- Data stored in json
-- Configurable stage/ring size (percentage)
-- [todo] Zoomable/scalable
-- [todo] History
+Run `ng build` to build the project. The build artifacts will be stored in the `dist/` directory. Use the `-prod` flag for a production build.
 
-### 3. [Live Preview](https://pszyller.github.io/tech-radar-builder)
+## Running unit tests
 
-### 4. Screenshots
+Run `ng test` to execute the unit tests via [Karma](https://karma-runner.github.io).
 
-#### Task List - why not ?:)
-![](https://pszyller.github.io/tech-radar-builder/img/1.png)
+## Running end-to-end tests
 
-#### Technologies in 3 slices
-![](https://pszyller.github.io/tech-radar-builder/img/2.png)
+Run `ng e2e` to execute the end-to-end tests via [Protractor](http://www.protractortest.org/).
+Before running the tests make sure you are serving the app via `ng serve`.
 
+## Deploying to GitHub Pages
+
+Run `ng github-pages:deploy` to deploy to GitHub Pages.
+
+## Further help
+
+To get more help on the `angular-cli` use `ng help` or go check out the [Angular-CLI README](https://github.com/angular/angular-cli/blob/master/README.md).

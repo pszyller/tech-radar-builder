@@ -1,0 +1,154 @@
+<nav class="navbar navbar-default">
+  <div class="container-fluid">
+    <div class="navbar-header">
+      <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#bs-example-navbar-collapse-1">
+        <span class="sr-only">Toggle navigation</span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+      </button>
+      <a class="navbar-brand" href="#">#a-dev</a>
+    </div>
+
+    <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
+      <ul class="nav navbar-nav">
+        <!--<li class="active"><a href="#">Add <span class="sr-only">(current)</span></a></li>
+        <li><a href="#">Link</a></li>-->
+        <li class="dropdown">
+          <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-expanded="false">Your Radars<span class="caret"></span></a>
+          <ul class="dropdown-menu" role="menu">
+            <li *ngFor="let item of radars"><a href="#" (click)="changeRadar(item)">{{item.config.title}}</a></li>
+          </ul>
+        </li>
+      </ul>
+
+      <ul class="nav navbar-nav navbar-right">
+        <li><a href="#" (click)="signOut()">Sign out</a></li>
+      </ul>
+    </div>
+  </div>
+</nav>
+
+<div *ngIf="loaded">
+  <div class="container">
+
+    <a href="#" class="btn btn-primary" data-toggle="modal" data-target="#myModal">Add Item</a>
+    <a href="#" class="btn btn-primary" data-toggle="modal" data-target="#configureModal" (click)="configureClick()">Configure</a>
+  </div>
+
+
+
+  <div id="myModal" class="modal">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+          <h4 class="modal-title">Create Radar Item</h4>
+        </div>
+        <div class="modal-body">
+          <form class="form-horizontal">
+            <fieldset>
+              <!--<legend>Legend</legend>-->
+              <div class="form-group">
+                <label for="inputEmail" class="col-lg-2 control-label">Title</label>
+                <div class="col-lg-10">
+                  <input type="text" class="form-control" name="newItemTitle" [(ngModel)]="newItemTitle" id="title" placeholder="Title">
+                </div>
+              </div>
+              <div class="form-group">
+                <label for="textArea" class="col-lg-2 control-label">Description</label>
+                <div class="col-lg-10">
+                  <textarea class="form-control" rows="3" name="newItemDesc" [(ngModel)]="newItemDesc"></textarea>
+                  <!--<span class="help-block">A longer block of help text that breaks onto a new line and may extend beyond one line.</span>-->
+                </div>
+              </div>
+            </fieldset>
+          </form>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+          <button type="button" class="btn btn-primary" (click)="addNewItem()" data-dismiss="modal">Save changes</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div id="configureModal" class="modal">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+          <h4 class="modal-title">Create Radar Item</h4>
+        </div>
+        <div class="modal-body">
+
+          <form class="form-horizontal">
+            <fieldset>
+              <legend>Options</legend>
+              <div class="form-group">
+                <label class="col-lg-2 control-label">Name</label>
+                <div class="col-lg-10">
+                  <input name="slice{{i}}" type="text" class="form-control" name="radarName" [(ngModel)]="workingCopyRadarDefinition.config.title"
+                    placeholder="radar name">
+                </div>
+              </div>
+              <div class="form-group">
+                <label for="itemsList" class="col-lg-2 control-label">Items list</label>
+                <div class="col-lg-10">
+          
+                  <div class="checkbox">
+                    <label>
+            <input type="checkbox" name="showItemsList" [(ngModel)]="workingCopyRadarDefinition.config.showItemsList"> (shows all items with descriptions under the radar)
+          </label>
+                  </div>
+                </div>
+              </div>
+              <legend>Slices</legend>
+
+              <div class="form-group" *ngFor="let item of workingCopyRadarDefinition.config.slices; let i = index; trackBy: trackByInd">
+                <label class="col-lg-2 control-label">Slice {{i+1}}</label>
+                <div class="input-group">
+                  <!--<span class="input-group-addon">$</span>-->
+                  <input name="slice{{i}}" type="text" class="form-control" [(ngModel)]="workingCopyRadarDefinition.config.slices[i]" placeholder="slice name">
+             
+
+                  <span class="input-group-btn">
+                         <!--<input name="percentage{{i}}" type="text" class="form-control"  placeholder="scale">-->
+                         <button class="btn btn-primary" type="button" [disabled]="!canRemoveSlices()" [ngClass]="{disabled: !canRemoveSlices()}" (click)="removeSlice(workingCopyRadarDefinition.config.slices[i])">Remove</button>
+                  </span>
+                </div>
+              </div>
+              <div class="pull-right">
+                <button class="btn btn-default" [disabled]="!canAddSlices()" [ngClass]="{disabled: !canAddSlices()}" type="button" (click)="addSlice()">Add</button>
+              </div>
+              <legend>Stages</legend>
+
+              <div class="form-group" *ngFor="let item of workingCopyRadarDefinition.config.stages; let i = index; trackBy: trackByInd">
+                <label class="col-lg-2 control-label">Stage {{i+1}}</label>
+                <div class="input-group">
+                  <!--<span class="input-group-addon">$</span>-->
+                  <input name="stage{{i}}" type="text" class="form-control" [(ngModel)]="workingCopyRadarDefinition.config.stages[i].name"
+                    placeholder="stage name">
+
+                    <span class="input-group-btn">
+                         <button class="btn btn-primary" type="button" [disabled]="!canRemoveStages()" [ngClass]="{disabled: !canRemoveStages()}" (click)="removeStage(workingCopyRadarDefinition.config.stages[i])">Remove</button>
+                  </span>
+                </div>
+              </div>
+              <div class="pull-right">
+                <button class="btn btn-default" type="button" [disabled]="!canAddStages()" [ngClass]="{disabled: !canAddStages()}" (click)="addStage()">Add</button>
+              </div>
+            </fieldset>
+          </form>
+        </div>
+
+
+
+        <div class="modal-footer">
+          <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+          <button type="button" class="btn btn-primary" (click)="addConfig()" data-dismiss="modal">Save changes</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
