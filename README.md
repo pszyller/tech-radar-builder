@@ -2,12 +2,18 @@
 
 ### Indroduction
 
-With **Technology radar builder** you can easly create custom radars with diffrent number of slices and stages. 
+Most of Tech-Radars creators I've found on the internet are inspired by Thoughtworks radars which are split into four quadrants and four rings. That's fine, but the problem begins if you would like to customise your work with radars and build three or four different diagrams for different areas. Of course, if you need to add additional stages (rings), or remove/add new slices to the radar...
+I had to choice between draw them in Excel or create my own radar builder... I've chosen the second option to have some fun :).
+
+So with [**Technology radar builder**](https://pszyller.github.io/tech-radar-builder)  you can easily create custom radars with a diffrent number of slices and stages.  Feel free to use it and contribute. 
+
+----
 
 ### 1. Stack
 
-- JavaScript
+- Angular 2
 - SVG ([Snap svg](http://snapsvg.io/))
+- Firebase (Angularfire2)
 
 ### 2. Features
 
@@ -15,18 +21,10 @@ With **Technology radar builder** you can easly create custom radars with diffre
 - Custom number of stages
 - Easy radar items adding/removing
 - Easy items moving (drag-n-drop)
-- Data stored in json
-- Configurable stage/ring size (percentage)
+- Radars stored in could
+- Configurable stage/ring size (percentage) [todo - ui]
 - [todo] Zoomable/scalable
 - [todo] History
 
-### 3. [Live Preview](https://pszyller.github.io/tech-radar-builder)
-
-### 4. Screenshots
-
-#### Task List - why not ?:)
-![](https://pszyller.github.io/tech-radar-builder/img/1.png)
-
-#### Technologies in 3 slices
-![](https://pszyller.github.io/tech-radar-builder/img/2.png)
+### 3. [Click and create your Radar!](https://pszyller.github.io/tech-radar-builder)
 
