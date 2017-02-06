@@ -14,7 +14,7 @@ export class FirebaseService {
 
   auth(provider : AuthProviders) {
     return this.angularFire.auth.login({
-      provider: AuthProviders.Github,
+      provider: provider,
       method: AuthMethods.Popup,
     });
   }
