@@ -29,21 +29,22 @@ export class RadarComponent implements OnInit {
 
   ngOnInit() {
       var l = this.firebaseService.getRadars(this.uid).subscribe(r => {
-      this.radars =
+      l.unsubscribe(); 
+     this.radars =
         _.map(r, i => {
           var obj = <RadarDefinition>JSON.parse(i.$value);
           obj.key = i.$key;
           return obj;
         });
-
+    
       this.techRadar = new TechRadar(this.radars[0], 1);
       this.techRadar.addUpdateListener(s =>
       {
-        l.unsubscribe();
+   
         this.firebaseService.updateRadar(this.uid, s);
       });
       this.radarDefinition = this.techRadar.data;
-      this.configureClick();
+      this.configureClick(false);
 
       this.loaded = true;
     });
@@ -77,15 +78,28 @@ export class RadarComponent implements OnInit {
   }
 
   addConfig() {
-
+   
     this.radarDefinition = JSON.parse(JSON.stringify(this.workingCopyRadarDefinition));
+
+    if(this.radarDefinition.key == null)
+    {
+       this.radars.push(this.radarDefinition);
+    }
+
     this.firebaseService.updateRadar(this.uid, this.radarDefinition);
     this.techRadar = new TechRadar(this.radarDefinition, 1);
     
   }
 
-  configureClick() {
+  configureClick(isNew : boolean) {
+   
     this.workingCopyRadarDefinition = JSON.parse(JSON.stringify(this.radarDefinition));
+    
+    if(isNew)
+    {
+    this.workingCopyRadarDefinition.key = null;
+    this.workingCopyRadarDefinition.config.title = '';
+    }
   }
 
   removeStage(stage: RadarStage) {
@@ -122,5 +136,11 @@ export class RadarComponent implements OnInit {
   {
     localStorage.removeItem("uid");
     window.location.href=window.location.href;
+  }
+  
+  deleteClick()
+  {
+    this.firebaseService.deleteRadar(this.uid, this.radarDefinition);
+    this.ngOnInit();
   }
 }

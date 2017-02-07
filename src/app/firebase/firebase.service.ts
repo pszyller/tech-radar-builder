@@ -39,9 +39,12 @@ export class FirebaseService {
           var item = this.angularFire.database.object('/radars/' + uid + '/' + radar.key);
           item.set(JSON.stringify(radar));
         }     
+    } 
 
-
-   // return this.angularFire.database.list('/radars/' + uid).update()
-
-    }  
+        deleteRadar(uid: string, radar: any) {
+          if(radar.key == null)
+          return;
+          var item = this.angularFire.database.object('/radars/' + uid + '/' + radar.key);
+          item.remove();
+    }   
 }
