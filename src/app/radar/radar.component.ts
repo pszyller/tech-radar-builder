@@ -28,21 +28,16 @@ export class RadarComponent implements OnInit {
   }
 
   ngOnInit() {
-      var l = this.firebaseService.getRadars(this.uid).subscribe(r => {
-      l.unsubscribe(); 
-     this.radars =
+    var l = this.firebaseService.getRadars(this.uid).subscribe(r => {
+      l.unsubscribe();
+      this.radars =
         _.map(r, i => {
           var obj = <RadarDefinition>JSON.parse(i.$value);
           obj.key = i.$key;
           return obj;
         });
-    
-      this.techRadar = new TechRadar(this.radars[0], 1);
-      this.techRadar.addUpdateListener(s =>
-      {
-   
-        this.firebaseService.updateRadar(this.uid, s);
-      });
+
+      this.createRadar(this.radars[0]);
       this.radarDefinition = this.techRadar.data;
       this.configureClick(false);
 
@@ -59,9 +54,18 @@ export class RadarComponent implements OnInit {
   }
 
   changeRadar(radar) {
-  
+
     this.radarDefinition = radar;
-    this.techRadar = new TechRadar(radar, 1);
+    this.createRadar(radar);
+  }
+
+ createRadar(radar:RadarDefinition)
+  {
+     this.techRadar = new TechRadar(radar, 1);
+    this.techRadar.addUpdateListener(s => {
+      console.log('saving ' + s.config.title);
+      this.firebaseService.updateRadar(this.uid, s);
+    });
   }
 
   canAddSlices() {
@@ -78,27 +82,25 @@ export class RadarComponent implements OnInit {
   }
 
   addConfig() {
-   
+
     this.radarDefinition = JSON.parse(JSON.stringify(this.workingCopyRadarDefinition));
 
-    if(this.radarDefinition.key == null)
-    {
-       this.radars.push(this.radarDefinition);
+    if (this.radarDefinition.key == null) {
+      this.radars.push(this.radarDefinition);
     }
 
     this.firebaseService.updateRadar(this.uid, this.radarDefinition);
-    this.techRadar = new TechRadar(this.radarDefinition, 1);
-    
+    this.createRadar(this.radarDefinition);
   }
 
-  configureClick(isNew : boolean) {
-   
+  configureClick(isNew: boolean) {
+
     this.workingCopyRadarDefinition = JSON.parse(JSON.stringify(this.radarDefinition));
-    
-    if(isNew)
-    {
-    this.workingCopyRadarDefinition.key = null;
-    this.workingCopyRadarDefinition.config.title = '';
+
+    if (isNew) {
+      this.workingCopyRadarDefinition.key = null;
+      this.workingCopyRadarDefinition.config.title = '';
+      this.workingCopyRadarDefinition.data = [];
     }
   }
 
@@ -132,14 +134,12 @@ export class RadarComponent implements OnInit {
   trackByInd(ind) {
   }
 
-  signOut()
-  {
+  signOut() {
     localStorage.removeItem("uid");
-    window.location.href=window.location.href;
+    window.location.href = window.location.href;
   }
-  
-  deleteClick()
-  {
+
+  deleteClick() {
     this.firebaseService.deleteRadar(this.uid, this.radarDefinition);
     this.ngOnInit();
   }
