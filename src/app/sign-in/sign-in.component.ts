@@ -1,4 +1,4 @@
-import { Component, OnInit, EventEmitter, Output } from '@angular/core';
+import { Component, OnInit,AfterViewInit, EventEmitter, Output } from '@angular/core';
 import { AngularFire, FirebaseAuthState, AuthProviders, AuthMethods, FirebaseListObservable } from 'angularfire2';
 import { FirebaseService } from '../firebase/firebase.service';
 import { Injectable } from '@angular/core';
@@ -11,26 +11,21 @@ import { TechRadar } from '../radar/radar';
   providers: [FirebaseService]
 })
 
-export class SignInComponent implements OnInit {
+export class SignInComponent implements AfterViewInit {
 
   uid: string;
-  @Output() signedin: EventEmitter<string>;
+  @Output() signedin: EventEmitter<string> = new EventEmitter<string>();
 
   constructor(private firebaseService: FirebaseService) {
-    this.signedin = new EventEmitter<string>();
   }
 
   authByGoogle() { this.authBy(AuthProviders.Google); }
-  authByGitHub() {
-    debugger;
-    this.authBy(AuthProviders.Github);
-  }
+  authByGitHub() { this.authBy(AuthProviders.Github); }
   authByFacebook() { this.authBy(AuthProviders.Facebook); }
   authByTwitter() { this.authBy(AuthProviders.Twitter); }
 
   authBy(provider: AuthProviders) {
     this.firebaseService.auth(provider).then(state => {
-
 
       if (state.uid != null) {
         this.uid = state.uid;
@@ -42,7 +37,8 @@ export class SignInComponent implements OnInit {
     });
   }
 
-  ngOnInit() {
+ngAfterViewInit() 
+ {
 
     this.uid = localStorage.getItem("uid");
     if (this.uid != null) {

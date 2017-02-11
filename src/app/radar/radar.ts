@@ -1,4 +1,4 @@
-import {RadarDefinition} from './radar-definition';
+import {RadarDefinition,RadarSlice,RadarDataItem,RadarDataItemDef} from './radar-definition';
 import * as _ from "lodash";
 declare var Snap: any;
 
@@ -63,31 +63,42 @@ export class TechRadar {
 
         var radarDefinition : RadarDefinition;
 var d = {
+                "key" : "",
                 "config": {
                     "title": "My New Radar",
                     "updateDate": new Date().toString(),
                     "contact": "",
+                    "showItemsList" : true,
                     "slices": [
-                        "Tools/Technologies",
-                        "Languages",
-                        "Practices"
+                         {
+                            "name": "Tools/Technologies",
+                            "perc": 33.33
+                        },
+                         {
+                            "name": "Languages",
+                            "perc": 33.33
+                        },
+                         {
+                            "name": "Practices",
+                            "perc": 33.33
+                        },
                     ],
                     "stages": [
                         {
                             "name": "On Hold",
-                            "scale": 0.2
+                            "perc": 25
                         },
                         {
                             "name": "Assess",
-                            "scale": 0.2
+                            "perc": 25
                         },
                         {
                             "name": "Trial",
-                            "scale": 0.2
+                            "perc": 25
                         },
                         {
                             "name": "Adopted",
-                            "scale": 0.4
+                            "perc": 25
                         }
                     ]
                 },
@@ -108,7 +119,7 @@ var d = {
             };
 
         radarDefinition = <RadarDefinition>d;
-        debugger;
+        
         if (radarData == null) {
             radarData = radarDefinition;
         }
@@ -200,7 +211,7 @@ var d = {
         }
     }
 
-    add(item, x, y, color) {
+    add(item, x, y, color, initBounce : boolean = false) {
         var _this = this;
         var dragObj = { matrix: { e: {}, f: {} } };
         var g = this.s.g();
@@ -235,6 +246,13 @@ var d = {
             stroke: "#050505",
             strokeWidth: 1
         });
+        if(initBounce)
+        {
+        Snap.animate(600, 100, function (val) {
+                c.transform('s' + (val/100));
+            }, 500, mina.bounce);
+        }
+
 
         var ct = this.s.multitext(10, 5, item.title, 150, { "font-size": (15 * _this.scale) + "px" });
 
@@ -298,7 +316,7 @@ var d = {
             stroke: color,
             fill: 'none',
             'stroke-opacity': this.radarAnimation ? 0 : 1,
-            strokeWidth: width - 1
+            strokeWidth: width
         });
 
         if (this.radarAnimation) {
@@ -308,7 +326,7 @@ var d = {
                 });
 
             }, 100 + (radius * 5), mina.easeinout);
-            Snap.animate(0, width - 1, function (val) {
+            Snap.animate(0, width, function (val) {
                 arc.attr({
                     'strokeWidth': val
                 });
@@ -319,10 +337,16 @@ var d = {
     }
 
     drawRing(parts: any, radius: any, width: any, oncreated: any, color: any) {
-        var rot = (360 / parts);
+        
+        let rotSum:number = 0;
         for (var i = 0; i < parts; i++) {
-            var c2 = this.draw(1 / parts, radius, color || this.colors[i], width);
-            c2.transform('r' + (rot * i) + ',' + this.centre.x + ',' + this.centre.y);
+            
+            var rot = 360 * (this.data.config.slices[i].perc/100); //(360 / parts);
+            
+            console.log('rot ' + i + ' : ' + rot + '   pecr: ' + this.data.config.slices[i].perc );
+            var c2 = this.draw(this.data.config.slices[i].perc/100, radius, color || this.colors[i], width);
+            c2.transform('r' + rotSum + ',' + this.centre.x + ',' + this.centre.y);
+            rotSum +=rot;
             oncreated(i, c2);
         }
     }
@@ -342,9 +366,9 @@ var d = {
 
         _.forEach(_.sortBy(this.data.data, function (c: any) {
             return c.slice;
-        }), function (slice) {
+        }), function (slice:RadarDataItem) {
 
-            var ind = _.findIndex(_this.data.config.slices, function (e) { return e == slice.slice });
+            var ind = _.findIndex(_this.data.config.slices, function (e) { return e.name == slice.slice });
             bullet.col = _this.cols[ind];
             bullet.y += 30;
             //  if(column.i%3 == 0)
@@ -371,11 +395,13 @@ var d = {
                 if (currentStage.name != stage.stage) {
                     currentStage.name = stage.stage;
                     bullet.y += 30;
+                    var b = 
                     _this.s.text(bullet.x + 5, bullet.y + 5, stage.stage.toUpperCase()).attr(
                         {
                             'font-family': "Super Sans",
                             'fill': '#000000', 'stroke': '#000000', 'stroke-width': 1.0,
                         });
+               
                     bullet.y += 30;
                 }
 
@@ -444,7 +470,7 @@ var d = {
 
         this.drawRing(slicesLength, _this.radius + (20), 35, function (sliceIndex, elem) {
             var l = elem.getTotalLength();
-            var t1 = _this.s.paper.text(l / 2, 0, _this.data.config.slices[sliceIndex].toUpperCase()).attr(
+            var t1 = _this.s.paper.text(l / 2, 0, _this.data.config.slices[sliceIndex].name).attr(
                 {
                     textpath: elem,
                     'fill': '#000000', 'stroke': '#000000', 'stroke-width': 0.2,
@@ -452,14 +478,15 @@ var d = {
                     "text-anchor": "middle",
                     "font-family": "Super Sans"
                 });
+                
         }, "#DDDDDD");
 
         var rSum = 0;
         for (var i = 0; i < stagesLength; i++) {
             // _this.radius = this.canvasSize / 2.5;
-            var ringWidth = _this.radius * _this.data.config.stages[i].scale;
+            var ringWidth = _this.radius * (_this.data.config.stages[i].perc / 100);
             var shift = ringWidth / 2;
-
+        
             this.drawRing(slicesLength, _this.radius - (rSum) - shift, ringWidth, function (sliceIndex, elem) {
                 //oncreated
 
@@ -468,11 +495,16 @@ var d = {
                 var stagei = _this.data.config.stages[i].name;
 
                 var l = elem.getTotalLength();
+                var size = 20;
+                if(l < 40) size = 15;
+                if(l < 20) size = 5;
+               // if(l < 20) size = 10;
+                console.log('L: ' + l);
                 var t1 = _this.s.paper.text(l / 2, 0, _this.data.config.stages[i].name).attr(
                     {
                         textpath: elem,
                         'fill': '#EEEEEE', 'stroke': '#EEEEEE', 'stroke-width': 0.2,
-                        "font-size": "20px",
+                        "font-size":  size + "px",
                         "text-anchor": "middle",
                         "font-family": "Super Sans"
                     });
@@ -486,19 +518,19 @@ var d = {
                     if (_this.dr && _this.dr.attr('display') == "none") {
                         var slice =
                             _.find(_this.data.data, function (e: any) {
-                                return e.slice == _this.data.config.slices[sliceIndex];
+                                return e.slice == _this.data.config.slices[sliceIndex].name;
                             });
 
                         if (!slice) {
                             slice = {
-                                slice: _this.data.config.slices[sliceIndex],
+                                slice: _this.data.config.slices[sliceIndex].name,
                                 data: []
                             };
                             _this.data.data.push(slice);
 
                         }
 
-                        var newItem = _this.dr.radarItem;
+                        var newItem = <RadarDataItemDef>_this.dr.radarItem;
                         newItem.stage = stagei;
                         newItem.x = _this.dr.matrix.e;
                         newItem.y = _this.dr.matrix.f;
@@ -543,24 +575,40 @@ var d = {
                     //     current.attr({ stroke: '#ff0000'});
                 });
                 _this.map[key] = elem;
-            }, '#ffffff');
-
+            }, this.colors[i]);
+     var f =this.s.paper.filter(Snap.filter.blur(5, 10));
+            var c = this.s.paper.circle(this.centre.x, this.centre.y, _this.radius - (rSum)).attr({
+         
+             strokeWidth: 1,
+             fill: "none",
+                     stroke: "#cccccc",
+                     strokeLinecap: "round",
+                        filter: f,
+            });
             rSum += ringWidth;
         }
 
+        var rotSum = 0;
         for (var i = 0; i < slicesLength; i++) {
-            var line = this.s.paper.line(this.centre.x, this.centre.y, this.centre.x, this.centre.y - _this.radius).attr({ strokeWidth: 1, stroke: "#cccccc", strokeLinecap: "round" });
-            line.transform('r' + (360 / slicesLength * i) + ',' + this.centre.x + ',' + this.centre.y);
+            var rot = this.data.config.slices[i].perc * 360 / 100;
+            var f = this.s.filter(Snap.filter.blur(5, 10));
+            var line = this.s.paper.line(this.centre.x, this.centre.y, this.centre.x, this.centre.y - _this.radius).attr(
+                {
+                     strokeWidth: 1,
+                     stroke: "#cccccc",
+                     strokeLinecap: "round",
+                     filter: f
+                });
+            line.transform('r' + rotSum + ',' + this.centre.x + ',' + this.centre.y);
+            rotSum +=rot;
         }
-
-
 
         var obj = _this.data.data;
 
         _.forEach(obj, function (slElems) {
             var slice = slElems.slice;
             _.forEach(slElems.data, function (obj) {
-                var ind = _.findIndex(_this.data.config.slices, function (e) { return e == slice })
+                var ind = _.findIndex(_this.data.config.slices, function (e) { return e.name == slice })
 
                 _this.add(obj, obj.x * _this.scale, obj.y * _this.scale, _this.cols[ind]);
             });
