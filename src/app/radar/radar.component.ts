@@ -1,8 +1,9 @@
 import { Component, OnInit } from '@angular/core';
 import * as _ from "lodash";
 import { TechRadar } from './radar';
-import { RadarDefinition, RadarDataItemDef, RadarStage } from './radar-definition';
+import { RadarDefinition, RadarDataItemDef, RadarStage, RadarSlice, ScalableItem } from './radar-definition';
 import { FirebaseService } from '../firebase/firebase.service';
+
 
 @Component({
   selector: 'app-radar',
@@ -20,6 +21,8 @@ export class RadarComponent implements OnInit {
   uid: string;
   radars: Array<RadarDefinition>;
   loaded: boolean = false;
+  lock: boolean = false;
+  json: string = "test";
 
   private newItemDesc: string;
 
@@ -38,7 +41,7 @@ export class RadarComponent implements OnInit {
         });
 
       this.createRadar(this.radars[0]);
-      this.radarDefinition = this.techRadar.data;
+      this.radarDefinition = this.techRadar.radarDefinition;
       this.configureClick(false);
 
       this.loaded = true;
@@ -50,7 +53,7 @@ export class RadarComponent implements OnInit {
     newItem.title = this.newItemTitle;
     newItem.desc = this.newItemDesc;
 
-    this.techRadar.add(newItem, 600, 200, "#ff0000");
+    this.techRadar.add(newItem, 500, 100, "#ff0000", true);
   }
 
   changeRadar(radar) {
@@ -59,11 +62,10 @@ export class RadarComponent implements OnInit {
     this.createRadar(radar);
   }
 
- createRadar(radar:RadarDefinition)
-  {
-     this.techRadar = new TechRadar(radar, 1);
+  createRadar(radar: RadarDefinition) {
+    this.techRadar = new TechRadar(radar, 1);
     this.techRadar.addUpdateListener(s => {
-      console.log('saving ' + s.config.title);
+     //this.json = JSON.stringify(s, null, 2);
       this.firebaseService.updateRadar(this.uid, s);
     });
   }
@@ -81,7 +83,11 @@ export class RadarComponent implements OnInit {
     return this.workingCopyRadarDefinition.config.stages.length > 1;
   }
 
-  addConfig() {
+  saveConfig() {
+
+
+
+
 
     this.radarDefinition = JSON.parse(JSON.stringify(this.workingCopyRadarDefinition));
 
@@ -96,6 +102,8 @@ export class RadarComponent implements OnInit {
   configureClick(isNew: boolean) {
 
     this.workingCopyRadarDefinition = JSON.parse(JSON.stringify(this.radarDefinition));
+    this.resetPerc(this.workingCopyRadarDefinition.config.stages, true);
+    this.resetPerc(this.workingCopyRadarDefinition.config.slices, true);
 
     if (isNew) {
       this.workingCopyRadarDefinition.key = null;
@@ -104,11 +112,23 @@ export class RadarComponent implements OnInit {
     }
   }
 
+  resetPerc(arr: Array<ScalableItem>, onlyIfMoreThan100: boolean) {
+
+    if (onlyIfMoreThan100) {
+      let sum = 0;
+      _.forEach(arr, (x) => sum += x.perc);
+      if (sum < 100.5) {
+        return;
+      }
+    }
+    _.forEach(arr, (x) => x.perc = Math.round((100 / arr.length) * 100)/100);
+  }
+
   removeStage(stage: RadarStage) {
     this.workingCopyRadarDefinition.config.stages =
       _.remove(this.workingCopyRadarDefinition.config.stages, (x: RadarStage) => { return x.name !== stage.name; });
 
-    _.forEach(this.workingCopyRadarDefinition.config.stages, (x: RadarStage) => { x.scale = 1 / this.workingCopyRadarDefinition.config.stages.length; });
+    this.resetPerc(this.workingCopyRadarDefinition.config.stages, false);
   }
 
   addStage() {
@@ -116,7 +136,7 @@ export class RadarComponent implements OnInit {
     newStage.name = "new stage " + (this.workingCopyRadarDefinition.config.stages.length + 1);
 
     this.workingCopyRadarDefinition.config.stages.push(newStage);
-    _.forEach(this.workingCopyRadarDefinition.config.stages, (x: RadarStage) => { x.scale = 1 / this.workingCopyRadarDefinition.config.stages.length; });
+    this.resetPerc(this.workingCopyRadarDefinition.config.stages, true);
   }
 
   removeSlice(slice: string) {
@@ -124,11 +144,13 @@ export class RadarComponent implements OnInit {
     this.workingCopyRadarDefinition.config.slices =
       _.remove(this.workingCopyRadarDefinition.config.slices, (x: string) => { return x !== slice; });
 
-    // _.forEach(this.radarDefinition.config.slices, (x:RadarStage)=>{ x.scale = 1/this.radarDefinition.config.stages.length; });
+    this.resetPerc(this.workingCopyRadarDefinition.config.slices, false);
+
   }
 
   addSlice() {
-    this.workingCopyRadarDefinition.config.slices.push("new slice " + (this.workingCopyRadarDefinition.config.slices.length + 1));
+    this.workingCopyRadarDefinition.config.slices.push(new RadarSlice({ name: "new slice " + (this.workingCopyRadarDefinition.config.slices.length + 1) }));
+    this.resetPerc(this.workingCopyRadarDefinition.config.slices, true);
   }
 
   trackByInd(ind) {
@@ -142,5 +164,29 @@ export class RadarComponent implements OnInit {
   deleteClick() {
     this.firebaseService.deleteRadar(this.uid, this.radarDefinition);
     this.ngOnInit();
+  }
+
+  percChanged(e, ind, arr: Array<ScalableItem>) {
+
+    let sum = 0;
+    _.forEach(arr, (x) => sum += x.perc);
+    console.debug('presum:' + sum);
+    let dx = sum - 100;
+    var dv = dx / (arr.length - 1);
+    var c = arr[ind].perc;
+    for (let i = 0; i < arr.length; i++) {
+      if (i === ind) {
+        continue;
+      }
+      arr[i].perc -= dv;
+      console.log('rounded b ' + arr[i].perc);
+      arr[i].perc = Math.round(arr[i].perc * 100) / 100;
+
+      console.log('rounded a ' + arr[i].perc);
+    }
+
+    sum = 0;
+    _.forEach(arr, (x) => sum += x.perc);
+    console.debug('sum:' + sum);
   }
 }

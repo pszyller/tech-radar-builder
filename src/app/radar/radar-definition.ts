@@ -1,7 +1,22 @@
-export class RadarStage
+export class ScalableItem
+{
+    id : number;
+    perc: number;
+}
+
+export class RadarStage extends ScalableItem
 {
     name: string;
-    scale: number;
+}
+
+export class RadarSlice extends ScalableItem
+{
+    name: string;
+
+    public constructor(init?:Partial<RadarSlice>) {
+        super();
+        Object.assign(this, init);
+    }
 }
 
 export class RadarConfig
@@ -10,22 +25,24 @@ export class RadarConfig
     updateDate: string;
     contact: string;
     showItemsList: boolean;
-    slices: Array<string>;
+    slices: Array<RadarSlice>;
     stages: Array<RadarStage>;
+
+    
 }
 
 export class RadarDataItemDef
 {
+    stageId: number;
     title: string;
     desc: string;
-    stage: string;
     x: number;
     y: number;
 }
 
 export class RadarDataItem
 {
-    slice: string;
+    sliceId: number;
     data: Array<RadarDataItemDef>;
 }
 
