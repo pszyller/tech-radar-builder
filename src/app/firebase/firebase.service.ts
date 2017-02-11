@@ -26,7 +26,7 @@ export class FirebaseService {
   }  
       updateRadar(uid: string, radar: any) {
 
-        if(radar.key.length == 0)
+        if((radar.key || '').length == 0)
         {
            this.angularFire.database.list('/radars/' + uid).push(JSON.stringify(radar)).then(r=>
            {

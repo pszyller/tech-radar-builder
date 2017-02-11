@@ -358,7 +358,7 @@ var d = {
             
             var rot = 360 * (this.radarDefinition.config.slices[i].perc/100); //(360 / parts);
             
-            console.log('rot ' + i + ' : ' + rot + '   pecr: ' + this.radarDefinition.config.slices[i].perc );
+            //console.log('rot ' + i + ' : ' + rot + '   pecr: ' + this.radarDefinition.config.slices[i].perc );
             var c2 = this.draw(this.radarDefinition.config.slices[i].perc/100, radius, color || this.colors[i], width);
             c2.transform('r' + rotSum + ',' + this.centre.x + ',' + this.centre.y);
             rotSum +=rot;
@@ -522,7 +522,7 @@ var d = {
                 if(l < 40) size = 15;
                 if(l < 20) size = 5;
                // if(l < 20) size = 10;
-                console.log('L: ' + l);
+                //console.log('L: ' + l);
                 var t1 = _this.s.paper.text(l / 2, 0, _this.radarDefinition.config.stages[i].name).attr(
                     {
                         textpath: elem,
@@ -599,10 +599,10 @@ var d = {
                 });
                 _this.map[key] = elem;
             }, this.colors[i]);
-     var f =this.s.paper.filter(Snap.filter.blur(5, 10));
+     var f =this.s.paper.filter(Snap.filter.blur(5, 5));
             var c = this.s.paper.circle(this.centre.x, this.centre.y, _this.radius - (rSum)).attr({
          
-             strokeWidth: 1,
+             strokeWidth: 2,
              fill: "none",
                      stroke: "#cccccc",
                      strokeLinecap: "round",
@@ -614,10 +614,10 @@ var d = {
         var rotSum = 0;
         for (var i = 0; i < slicesLength; i++) {
             var rot = this.radarDefinition.config.slices[i].perc * 360 / 100;
-            var f = this.s.filter(Snap.filter.blur(5, 10));
+            var f = this.s.filter(Snap.filter.blur(5, 5));
             var line = this.s.paper.line(this.centre.x, this.centre.y, this.centre.x, this.centre.y - _this.radius).attr(
                 {
-                     strokeWidth: 1,
+                     strokeWidth: 2,
                      stroke: "#cccccc",
                      strokeLinecap: "round",
                      filter: f
