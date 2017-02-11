@@ -1,13 +1,12 @@
 export class ScalableItem
 {
-
+    id : number;
     perc: number;
 }
 
 export class RadarStage extends ScalableItem
 {
     name: string;
-
 }
 
 export class RadarSlice extends ScalableItem
@@ -28,20 +27,22 @@ export class RadarConfig
     showItemsList: boolean;
     slices: Array<RadarSlice>;
     stages: Array<RadarStage>;
+
+    
 }
 
 export class RadarDataItemDef
 {
+    stageId: number;
     title: string;
     desc: string;
-    stage: string;
     x: number;
     y: number;
 }
 
 export class RadarDataItem
 {
-    slice: string;
+    sliceId: number;
     data: Array<RadarDataItemDef>;
 }
 

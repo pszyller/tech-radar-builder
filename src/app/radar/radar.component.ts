@@ -41,7 +41,7 @@ export class RadarComponent implements OnInit {
         });
 
       this.createRadar(this.radars[0]);
-      this.radarDefinition = this.techRadar.data;
+      this.radarDefinition = this.techRadar.radarDefinition;
       this.configureClick(false);
 
       this.loaded = true;
@@ -65,7 +65,7 @@ export class RadarComponent implements OnInit {
   createRadar(radar: RadarDefinition) {
     this.techRadar = new TechRadar(radar, 1);
     this.techRadar.addUpdateListener(s => {
-      this.json = JSON.stringify(s, null, 2);
+     //this.json = JSON.stringify(s, null, 2);
       this.firebaseService.updateRadar(this.uid, s);
     });
   }
@@ -86,7 +86,7 @@ export class RadarComponent implements OnInit {
   saveConfig() {
 
 
-    
+
 
 
     this.radarDefinition = JSON.parse(JSON.stringify(this.workingCopyRadarDefinition));
