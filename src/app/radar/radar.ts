@@ -599,10 +599,10 @@ var d = {
                 });
                 _this.map[key] = elem;
             }, this.colors[i]);
-     var f =this.s.paper.filter(Snap.filter.blur(5, 5));
+     var f =this.s.paper.filter(Snap.filter.blur(1, 1));
             var c = this.s.paper.circle(this.centre.x, this.centre.y, _this.radius - (rSum)).attr({
          
-             strokeWidth: 2,
+             strokeWidth: 1,
              fill: "none",
                      stroke: "#cccccc",
                      strokeLinecap: "round",
@@ -614,10 +614,10 @@ var d = {
         var rotSum = 0;
         for (var i = 0; i < slicesLength; i++) {
             var rot = this.radarDefinition.config.slices[i].perc * 360 / 100;
-            var f = this.s.filter(Snap.filter.blur(5, 5));
+            var f = this.s.filter(Snap.filter.blur(1, 1));
             var line = this.s.paper.line(this.centre.x, this.centre.y, this.centre.x, this.centre.y - _this.radius).attr(
                 {
-                     strokeWidth: 2,
+                     strokeWidth: 1,
                      stroke: "#cccccc",
                      strokeLinecap: "round",
                      filter: f
