@@ -21,7 +21,7 @@ export class AppComponent {
 ngOnInit() {
     // subscribe to router event
      this.route.params.subscribe((params: Params) => {
-    alert(params[0]); 
+    
     });
     this.route.queryParams.subscribe((params: Params) => {
          

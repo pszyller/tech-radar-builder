@@ -1,7 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import * as _ from "lodash";
 import { TechRadar } from './radar';
-import { RadarDefinition, RadarDataItemDef, RadarStage, RadarSlice, ScalableItem } from './radar-definition';
+import { RadarDefinition, RadarDataItemDef, RadarStage, RadarSlice, ScalableItem, ViewSettings } from './radar-definition';
 import { FirebaseService } from '../firebase/firebase.service';
 
 
@@ -23,11 +23,12 @@ export class RadarComponent implements OnInit {
   loaded: boolean = false;
   lock: boolean = false;
   json: string = "test";
+  viewSettings: ViewSettings = new ViewSettings();
 
   private newItemDesc: string;
 
   constructor(private firebaseService: FirebaseService) {
-debugger;
+    this.viewSettings.readOnly = true;
     this.uid = localStorage.getItem("uid");
 
   }
@@ -56,7 +57,7 @@ debugger;
     newItem.title = this.newItemTitle;
     newItem.desc = this.newItemDesc;
 
-    this.techRadar.add(newItem, 500, 100, "#ff0000", false);
+    this.techRadar.add(newItem, 500, 100, "#ff0000", true);
   }
 
   changeRadar(radar) {

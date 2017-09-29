@@ -52,3 +52,8 @@ export class RadarDefinition
     config : RadarConfig;
     data: Array<RadarDataItem>;
 }
+
+export class ViewSettings
+{
+    readOnly:boolean;
+}
