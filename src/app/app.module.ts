@@ -11,7 +11,7 @@ import { RadarComponent } from './radar/radar.component';
 import { TechRadar } from './radar/radar';
 
 const appRoutes: Routes = [
-  { path: 'signin', component: SignInComponent },
+ // { path: 'signin', component: SignInComponent },
 ];
 
 // Must export the config

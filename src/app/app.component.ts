@@ -1,4 +1,5 @@
-import { Component } from '@angular/core';
+import { Component, ChangeDetectorRef } from '@angular/core';
+import {Router, ActivatedRoute, Params} from '@angular/router';
 
 @Component({
   selector: 'app-root',
@@ -7,14 +8,38 @@ import { Component } from '@angular/core';
 })
 export class AppComponent {
 
-  showRadar : boolean = false;
+  showRadar : boolean;
+  uid: string;
+  owner:string = "";
+  ready: boolean;
+  init: boolean = true;
 
-  constructor() {
+  constructor(private route: ActivatedRoute, private ref: ChangeDetectorRef) {
   //  this.showRadar = false;
   }
 
+ngOnInit() {
+    // subscribe to router event
+     this.route.params.subscribe((params: Params) => {
+    alert(params[0]); 
+    });
+    this.route.queryParams.subscribe((params: Params) => {
+         
+         
+         if(window.location.href.indexOf('?') > 0 && this.init)
+         {
+          this.init = false;
+          return;  
+         }
+
+         this.owner = params['id'];
+         this.ready = true;
+      });
+  }
   signedIn(e) {
+  
     this.showRadar = true;
+
   }
 
 

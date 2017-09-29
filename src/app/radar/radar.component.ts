@@ -27,11 +27,14 @@ export class RadarComponent implements OnInit {
   private newItemDesc: string;
 
   constructor(private firebaseService: FirebaseService) {
+debugger;
     this.uid = localStorage.getItem("uid");
+
   }
 
   ngOnInit() {
-    var l = this.firebaseService.getRadars(this.uid).subscribe(r => {
+    debugger;
+  var l = this.firebaseService.getRadars(this.uid).subscribe(r => {
       l.unsubscribe();
       this.radars =
         _.map(r, i => {
@@ -53,7 +56,7 @@ export class RadarComponent implements OnInit {
     newItem.title = this.newItemTitle;
     newItem.desc = this.newItemDesc;
 
-    this.techRadar.add(newItem, 500, 100, "#ff0000", true);
+    this.techRadar.add(newItem, 500, 100, "#ff0000", false);
   }
 
   changeRadar(radar) {
