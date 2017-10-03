@@ -18,23 +18,29 @@ export class RadarComponent implements OnInit {
   radarDefinition: RadarDefinition
   workingCopyRadarDefinition: RadarDefinition
   newItemTitle: string;
+  newItemMode :string;
+  editingItem : RadarDataItemDef;
   uid: string;
   radars: Array<RadarDefinition>;
   loaded: boolean = false;
   lock: boolean = false;
+  firebaseService: FirebaseService;
   json: string = "test";
   viewSettings: ViewSettings = new ViewSettings();
 
   private newItemDesc: string;
+  private newItemSize: number;
 
-  constructor(private firebaseService: FirebaseService) {
-    this.viewSettings.readOnly = true;
+  constructor(private fService: FirebaseService) {
+    this.viewSettings.readOnly = !fService.isAuth;
     this.uid = localStorage.getItem("uid");
-
+    this.firebaseService = fService;
   }
 
   ngOnInit() {
-    debugger;
+    
+
+
   var l = this.firebaseService.getRadars(this.uid).subscribe(r => {
       l.unsubscribe();
       this.radars =
@@ -52,12 +58,39 @@ export class RadarComponent implements OnInit {
     });
   }
 
+  editItem(item : RadarDataItemDef)
+  {
+    this.editingItem = item;
+    this.newItemTitle = item.title;
+    this.newItemDesc = item.desc;
+    this.newItemSize = item.size;
+    this.newItemMode = 'edit';
+
+    document.getElementById('itemDetailsBtn').click();
+  }
+
   addNewItem() {
+ 
     let newItem = new RadarDataItemDef();
+    newItem.x = 500;
+    newItem.y = 100;
+    debugger;
+    if(this.newItemMode == 'edit')
+    {
+      var oldName = this.editingItem.title;
+       this.editingItem.title = this.newItemTitle;
+    this.editingItem.desc = this.newItemDesc;
+    this.editingItem.size = this.newItemSize;
+
+        this.techRadar.update(this.editingItem, oldName);
+      return;
+    }
+
     newItem.title = this.newItemTitle;
     newItem.desc = this.newItemDesc;
+    newItem.size = this.newItemSize;
 
-    this.techRadar.add(newItem, 500, 100, "#ff0000", true);
+    this.techRadar.add(newItem, newItem.x, newItem.y, "#ff0000", true);
   }
 
   changeRadar(radar) {
@@ -67,11 +100,17 @@ export class RadarComponent implements OnInit {
   }
 
   createRadar(radar: RadarDefinition) {
-    this.techRadar = new TechRadar(radar, 1);
+    this.techRadar = new TechRadar(radar, 1, this.viewSettings.readOnly);
+  
+
     this.techRadar.addUpdateListener(s => {
      //this.json = JSON.stringify(s, null, 2);
       this.firebaseService.updateRadar(this.uid, s);
     });
+    this.techRadar.editItem = (itm) =>
+    {
+      this.editItem(itm);
+    }
   }
 
   canAddSlices() {
@@ -88,10 +127,6 @@ export class RadarComponent implements OnInit {
   }
 
   saveConfig() {
-
-
-
-
 
     this.radarDefinition = JSON.parse(JSON.stringify(this.workingCopyRadarDefinition));
 
@@ -162,7 +197,22 @@ export class RadarComponent implements OnInit {
 
   signOut() {
     localStorage.removeItem("uid");
+    this.firebaseService.logout();
     window.location.href = window.location.href;
+  }
+
+  signedIn(uid)
+  {
+    this.uid = this.uid;
+    window.location.href = window.location.href;
+  }
+
+  editClick()
+  {
+    this.viewSettings.readOnly = !this.viewSettings.readOnly;
+
+    this.createRadar(this.radars[0]);
+    
   }
 
   deleteClick() {

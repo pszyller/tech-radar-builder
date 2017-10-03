@@ -14,7 +14,7 @@ Snap.plugin(function (Snap, Element, Paper, glob) {
         var letter_width = temp.getBBox().width / abc.length;
         svg.remove();
 
-        var words = txt.split(" ");
+        var words = (txt || "").split(" ");
         var width_so_far = 0, current_line = 0, lines = [''];
         for (var i = 0; i < words.length; i++) {
 
@@ -46,6 +46,7 @@ export class TechRadar {
     radarAnimation: boolean;
     t: any;
     updateListeners: any;
+    editItem: any;
     colors: any;
     cols: any;
     map: any;
@@ -57,8 +58,11 @@ export class TechRadar {
     dr: any;
     readOnly: boolean;
 
-    constructor(radarData, scale) {
 
+
+    constructor(radarData, scale, readOnly:boolean) {
+
+        this.readOnly = readOnly;
         var radarDefinition : RadarDefinition;
 var d = {
                 "key" : "",
@@ -148,7 +152,7 @@ var d = {
         this.colors =
             [
                 '#ffffff',
-                '#ffffff',
+                '#ff0000',
                 '#ffffff',
                 '#ffffff',
                 '#ffffff',
@@ -184,6 +188,8 @@ var d = {
                 viewBox: "0,0," + (this.vbSize * val / 100) + "," + (this.vbSize * val / 100)
             });
     }
+
+
 
     addUpdateListener(fn) {
         this.updateListeners.push(fn);
@@ -226,50 +232,78 @@ var d = {
         }
     }
 
-    add(item, x, y, color, initBounce : boolean = false) {
+    update(item:RadarDataItemDef, oldName:string)
+    {
+        debugger;
+        var _this = this;
+        _this.dr = null;
+
+     this.updateListeners.forEach(function (fn) {
+                            fn(_this.radarDefinition);
+                        });
+      _this.create(_this.size, _this.radarDefinition);
+    }
+    add(item : RadarDataItemDef, x, y, color, initBounce : boolean = false) {
         var _this = this;
         var dragObj = { matrix: { e: {}, f: {} } };
         var g = this.s.g();
+        var moved = false;
 
         var move = function (dx, dy) {
             dx *= 2000 / window.innerWidth;
             dy *= 2000 / window.innerWidth;
             //_this.itemDescription.attr({ "display": "none" });
-
+           
+           if(dx > 0 || dy > 0)
+            moved = true;
             this.attr({
                 transform: this.data('origTransform') + (this.data('origTransform') ? "T" : "t") + [dx, dy]
             });
         }
 
-        var start = function () {
+        var start = function (e,f) {
             dragObj = this;
+            moved = false;
+              
             this.data('origTransform', this.transform().local);
         }
 
         var stop = function () {
+
+            if(!moved)
+            {
+                if(_this.editItem)
+                {
+
+                   _this.editItem(item);
+                   return;
+                }
+            };
+            
+
             var x = dragObj.matrix.e;
             var y = dragObj.matrix.f;
             _this.dr = dragObj;
 
             _this.dr.attr({ display: "none" });
         }
-
-        var c = this.s.circle(0, 0, 4);
+        item.size = item.size|| 4;
+        var c = this.s.circle(0, 0, item.size);
         c.attr({
             fill: color,
-            'fill-opacity': 0.5,
-            stroke: "#050505",
-            strokeWidth: 1
+            'fill-opacity': 1,
+            stroke: "#FFFFFF",
+            strokeWidth: 0.5
         });
         if(initBounce)
         {
         Snap.animate(600, 100, function (val) {
                 c.transform('s' + (val/100));
-            }, 500, mina.bounce);
+            }, 500, mina.elastic);
         }
 
 
-        var ct = this.s.multitext(10, 5, item.title, 150, { "font-size": (15 * _this.scale) + "px" });
+        var ct = this.s.multitext(6 + item.size, 5, item.title, 150, { "font-size": (15 * _this.scale) + "px" });
 
         if (!_this.radarAnimation)
             g.transform('t' + x + ',' + y);
@@ -278,11 +312,26 @@ var d = {
             {
                 title: item.title,
                 desc: item.desc,
+                size : item.size
             };
+
+
 
         if (!this.readOnly) {
             g.drag(move, start, stop);
             g.attr({ 'cursor': 'move' });
+        }
+        else
+        {
+            g.click(function()
+            {
+                if(_this.editItem)
+                {
+                                        debugger;
+                   _this.editItem(item);
+                }
+            });
+             
         }
 
         g.hover(function () {
@@ -313,7 +362,7 @@ var d = {
 
     }
 
-    draw(percent, radius, color, width) {
+    draw(percent, radius, color, maxOpacity, width) {
         var arc = this.s.path("");
         var startY = this.centre.y - radius;
         var endpoint = percent * 360;
@@ -330,12 +379,12 @@ var d = {
         arc.attr({
             stroke: color,
             fill: 'none',
-            'stroke-opacity': this.radarAnimation ? 0 : 1,
+            'stroke-opacity': this.radarAnimation ? 0 : maxOpacity/100,
             strokeWidth: width
         });
 
         if (this.radarAnimation) {
-            Snap.animate(0, 100, function (val) {
+            Snap.animate(0, maxOpacity, function (val) {
                 arc.attr({
                     'stroke-opacity': (val / 100)
                 });
@@ -351,20 +400,42 @@ var d = {
         return arc;
     }
 
-    drawRing(parts: any, radius: any, width: any, oncreated: any, color: any) {
+    drawRing(parts: any, radius: any, width: any, oncreated: any, color: any, stageIndex: number) {
         
         let rotSum:number = 0;
         for (var i = 0; i < parts; i++) {
             
             var rot = 360 * (this.radarDefinition.config.slices[i].perc/100); //(360 / parts);
             
-            //console.log('rot ' + i + ' : ' + rot + '   pecr: ' + this.radarDefinition.config.slices[i].perc );
-            var c2 = this.draw(this.radarDefinition.config.slices[i].perc/100, radius, color || this.colors[i], width);
+            var col = this.radarDefinition.config.slices[i].color;
+            //col = this.colorLuminance(col, stageIndex/this.radarDefinition.config.stages.length);
+            var opacity = (0.5 + (0.5 * stageIndex/this.radarDefinition.config.stages.length))*100;
+            var c2 = this.draw(this.radarDefinition.config.slices[i].perc/100, radius, col, opacity, width);
             c2.transform('r' + rotSum + ',' + this.centre.x + ',' + this.centre.y);
             rotSum +=rot;
             oncreated(i, c2);
         }
     }
+
+    colorLuminance(hex, lum) {
+debugger;
+	// validate hex string
+	hex = String(hex).replace(/[^0-9a-f]/gi, '');
+	if (hex.length < 6) {
+		hex = hex[0]+hex[0]+hex[1]+hex[1]+hex[2]+hex[2];
+	}
+	lum = lum || 0;
+
+	// convert to decimal and change luminosity
+	var rgb = "#", c, i;
+	for (i = 0; i < 3; i++) {
+		c = parseInt(hex.substr(i*2,2), 16);
+		c = Math.round(Math.min(Math.max(0, c + (c * lum)), 255)).toString(16);
+		rgb += ("00"+c).substr(c.length);
+	}
+
+	return rgb;
+}
 
     write(text, x, y) {
         this.t.remove();
@@ -397,9 +468,9 @@ var d = {
             if(!elem)
             return;
             _this.s.text(bullet.x, bullet.y, elem.name).attr({
-                'fill': bullet.col, 'stroke': '#000000', 'stroke-width': 1.0,
+                'fill': bullet.col, 'stroke': '#000000', 'stroke-width': 0.0,
                 "font-size": "20px",
-                "font-family": "Super Sans"
+                "font-family": "Arial"
             });
 
             var currentStage = { stageId: -1 };
@@ -409,21 +480,26 @@ var d = {
                 });
             }), function (stage) {
 
-        var ind = _.findIndex(_this.radarDefinition.config.stages, function (e) {
+             var ind = _.findIndex(_this.radarDefinition.config.stages, function (e) {
                     return e.id == stage.stageId
                 });
-                       var st = _.find(_this.radarDefinition.config.stages, function (e) {
+              
+            var st = _.find(_this.radarDefinition.config.stages, function (e) {
                     return e.id == stage.stageId
                 });
+            
+            
+            
 
                 if (currentStage.stageId != stage.stageId) {
                     currentStage.stageId = stage.stageId;
                     bullet.y += 30;
-                    var b = 
-                    _this.s.text(bullet.x + 5, bullet.y + 5, st.name.toUpperCase()).attr(
+                    var n = (st && st.name) ? st.name : "[error neme]";
+                    
+                    var b = _this.s.text(bullet.x + 5, bullet.y + 5, n).attr(
                         {
-                            'font-family': "Super Sans",
-                            'fill': '#000000', 'stroke': '#000000', 'stroke-width': 1.0,
+                            'font-family': "Arial",
+                            'fill': '#000000', 'stroke': '#000000', 'stroke-width': 0.0,
                         });
                
                     bullet.y += 30;
@@ -437,7 +513,7 @@ var d = {
                         fill: bullet.col,
                         'fill-opacity': 0.5,
                         stroke: "#050505",
-                        "font-family": "Super Sans",
+                        "font-family": "Arial",
                         strokeWidth: 1
                     });
 
@@ -454,7 +530,7 @@ var d = {
 
                 // _this.s.text(bullet.x +20, bullet.y + 5, stage.title + (stage.desc ? ' - ' : '') + stage.desc).attr(
                 //     {
-                //            "font-family" : "Super Sans"
+                //            "font-family" : "Arial"
                 //     });
                 bullet.y += desc.node.clientHeight;
                 //       var rect = this.s.rect(this.centre - this.radius, this.centre + this.radius, 100,100)
@@ -475,34 +551,29 @@ var d = {
         var current = null;
         this.map = {};
 
-        var title = _this.s.paper.text(this.centre.x, 50, _this.radarDefinition.config.title.toUpperCase()).attr(
-            {
-                'fill': '#000000', 'stroke': '#000000', 'stroke-width': 0.5,
-                "font-size": "25px",
-                "font-family": "Super Sans",
-                "text-anchor": "middle",
-            });
-
-        // _this.s.paper.text(800, 15, 'contact: ' + _this.data.config.contact).attr(
+        // var title = _this.s.paper.text(this.centre.x, 50, _this.radarDefinition.config.title.toUpperCase()).attr(
         //     {
-        //         'fill': '#000000', 'stroke': '#000000', 'stroke-width': 0.2,
-        //         "font-size": "15px",
-        //         "text-anchor": "start",
-        //         "font-family" : "Super Sans Bold"
+        //         'fill': '#000000', 'stroke': '#000000', 'stroke-width': 0.5,
+        //         "font-size": "25px",
+        //         "font-family": "Arial",
+        //         "text-anchor": "middle",
         //     });
 
-        this.drawRing(slicesLength, _this.radius + (20), 35, function (sliceIndex, elem) {
+       
+
+        this.drawRing(slicesLength, _this.radius + (15), 30, function (sliceIndex, elem) {
             var l = elem.getTotalLength();
-            var t1 = _this.s.paper.text(l / 2, 0, _this.radarDefinition.config.slices[sliceIndex].name).attr(
+            var t1 = _this.s.paper.text((l / 2), 100, _this.radarDefinition.config.slices[sliceIndex].name).attr(
                 {
                     textpath: elem,
-                    'fill': '#000000', 'stroke': '#000000', 'stroke-width': 0.2,
+                    'fill': '#000000', 'stroke': '#000000', 'stroke-width': 0.0,
                     "font-size": "15px",
                     "text-anchor": "middle",
-                    "font-family": "Super Sans"
+                    
+                    "font-family": "Arial"
                 });
                 
-        }, "#DDDDDD");
+        }, "#DDDDDD", 0);
 
         var rSum = 0;
         for (var i = 0; i < stagesLength; i++) {
@@ -526,10 +597,10 @@ var d = {
                 var t1 = _this.s.paper.text(l / 2, 0, _this.radarDefinition.config.stages[i].name).attr(
                     {
                         textpath: elem,
-                        'fill': '#EEEEEE', 'stroke': '#EEEEEE', 'stroke-width': 0.2,
+                        'fill': '#DDDDDD', 'stroke': '#515151', 'stroke-width': 0.0,
                         "font-size":  size + "px",
                         "text-anchor": "middle",
-                        "font-family": "Super Sans"
+                        "font-family": "Arial"
                     });
                 //  t1.transform('r' + (360/slicesLength*i) + ',' + _this.centre + ',' + _this.centre);
 
@@ -572,6 +643,7 @@ var d = {
                         if (Math.sqrt(dx * dx + dy * dy) <= _this.radius) {
                             newItem.x *= 1 / _this.scale;
                             newItem.y *= 1 / _this.scale;
+                            debugger;
                             slice.data.push(newItem);
                         }
                         _this.dr.attr({ display: "" });
@@ -598,14 +670,14 @@ var d = {
                     //     current.attr({ stroke: '#ff0000'});
                 });
                 _this.map[key] = elem;
-            }, this.colors[i]);
-     var f =this.s.paper.filter(Snap.filter.blur(1, 1));
+            }, this.colors[i], i);
+            var f = this.s.paper.filter(Snap.filter.blur(0.1, 0.1));
             var c = this.s.paper.circle(this.centre.x, this.centre.y, _this.radius - (rSum)).attr({
          
              strokeWidth: 1,
              fill: "none",
-                     stroke: "#cccccc",
-                     strokeLinecap: "round",
+                     stroke: "#AAAAAA",
+                   //  strokeLinecap: "round",
                         filter: f,
             });
             rSum += ringWidth;
@@ -614,12 +686,12 @@ var d = {
         var rotSum = 0;
         for (var i = 0; i < slicesLength; i++) {
             var rot = this.radarDefinition.config.slices[i].perc * 360 / 100;
-            var f = this.s.filter(Snap.filter.blur(1, 1));
-            var line = this.s.paper.line(this.centre.x, this.centre.y, this.centre.x, this.centre.y - _this.radius).attr(
+            var f = this.s.filter(Snap.filter.blur(0.1, 0.1));
+            var line = this.s.paper.line(this.centre.x, this.centre.y, this.centre.x, this.centre.y - _this.radius -100).attr(
                 {
                      strokeWidth: 1,
-                     stroke: "#cccccc",
-                     strokeLinecap: "round",
+                     stroke: "#AAAAAA",
+                    // strokeLinecap: "round",
                      filter: f
                 });
             line.transform('r' + rotSum + ',' + this.centre.x + ',' + this.centre.y);
@@ -631,8 +703,8 @@ var d = {
         _.forEach(obj, function (slElems) {
             var sliceId = slElems.sliceId;
             _.forEach(slElems.data, function (obj) {
-                var ind = _.findIndex(_this.radarDefinition.config.slices, function (e) { return e.id == sliceId })
-                _this.add(obj, obj.x * _this.scale, obj.y * _this.scale, _this.cols[ind]);
+                //var ind = _.findIndex(_this.radarDefinition.config.slices, function (e) { return e.id == sliceId })
+                _this.add(obj, obj.x * _this.scale, obj.y * _this.scale, _this.cols[0]);
             });
         });
 

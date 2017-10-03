@@ -5,10 +5,13 @@ import { Injectable } from '@angular/core';
 export class FirebaseService {
   items: FirebaseListObservable<any[]>;
   angularFire: AngularFire;
-
+  isAuth : boolean;
   constructor(af: AngularFire) {
     this.angularFire = af;
-
+    this.angularFire.auth.subscribe( (state)=>
+    {
+      this.isAuth = state != null;     
+    });
   //  this.items = af.database.list('/radars');
   }
 
@@ -19,13 +22,19 @@ export class FirebaseService {
     });
   }
 
-    getRadars(uid: string) {
+  logout()
+  {
+    this.angularFire.auth.logout();
+    
+  }
+
+   getRadars(uid: string) {
     
     return this.angularFire.database.list('/radars/' + uid);
 
   }  
       updateRadar(uid: string, radar: any) {
-
+debugger;
         if((radar.key || '').length == 0)
         {
            this.angularFire.database.list('/radars/' + uid).push(JSON.stringify(radar)).then(r=>
@@ -37,7 +46,7 @@ export class FirebaseService {
         else
         {
           var item = this.angularFire.database.object('/radars/' + uid + '/' + radar.key);
-          item.set(JSON.stringify(radar));
+          item.set(JSON.stringify(radar)).then(()=>{}, (err:any)=>{ alert(err); });
         }     
     } 
 

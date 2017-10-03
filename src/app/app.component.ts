@@ -31,7 +31,8 @@ ngOnInit() {
           this.init = false;
           return;  
          }
-
+         
+         localStorage.setItem("uid", params['id']);
          this.owner = params['id'];
          this.ready = true;
       });

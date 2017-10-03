@@ -1,11 +1,10 @@
-<h1>
-  {{title}}
-</h1>
- 
+<!-- 
  <div *ngIf='!showRadar && ready' >
  <app-sign-in (signedin)='signedIn($event)' [owner]='owner'></app-sign-in>
  </div>
  <div *ngIf='showRadar && ready' >
  <app-radar  ></app-radar>
- </div>
+ </div>-->
 
+ 
+<app-radar *ngIf='ready'  ></app-radar>

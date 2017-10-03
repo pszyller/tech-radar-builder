@@ -12,6 +12,7 @@ export class RadarStage extends ScalableItem
 export class RadarSlice extends ScalableItem
 {
     name: string;
+    color: string;
 
     public constructor(init?:Partial<RadarSlice>) {
         super();
@@ -36,6 +37,7 @@ export class RadarDataItemDef
     stageId: number;
     title: string;
     desc: string;
+    size: number;
     x: number;
     y: number;
 }

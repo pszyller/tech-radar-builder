@@ -1,6 +1,20 @@
-<nav class="navbar navbar-default" *ngIf='!viewSettings.readOnly' >
+<div id="main-header">
+                        
+            
+            <div id="title-heading" class="pagetitle with-breadcrumbs">
+                
+                    <div id="breadcrumb-section">
+                    </div>
+                
+                
+
+                <h1 id="title-text" class="with-breadcrumbs">{{ radarDefinition ? radarDefinition.config.title : "..."}}</h1>
+            </div>
+</div>
+
+<nav class="navbar navbar-default"  >
   <div class="container-fluid">
-    <div class="navbar-header">
+    <!--<div class="navbar-header">
       <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#bs-example-navbar-collapse-1">
         <span class="sr-only">Toggle navigation</span>
         <span class="icon-bar"></span>
@@ -8,10 +22,10 @@
         <span class="icon-bar"></span>
       </button>
 
-    </div>
+    </div>-->
 
     <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
-      <ul class="nav navbar-nav">
+      <ul class="nav navbar-nav" style="background-color: transparent">
         <!--<li class="active"><a href="#">Add <span class="sr-only">(current)</span></a></li>
         <li><a href="#">Link</a></li>-->
         <li class="dropdown">
@@ -25,31 +39,41 @@
       </ul>
 
       <ul class="nav navbar-nav navbar-right">
-        <li><a href="#" (click)="signOut()">Sign out</a></li>
+        <li *ngIf="firebaseService.isAuth"><a href="#" (click)="editClick()">Edit</a></li>
+        <li *ngIf="!firebaseService.isAuth" data-toggle="modal" data-target="#signinModal"><a href="#" >Sign in</a></li>
+        <li *ngIf="firebaseService.isAuth" ><a href="#" (click)="signOut()">Sign out</a></li>
+        <li><a href="#" onclick="window.open(window.location.href)">Full screen</a></li>
+
+
+
       </ul>
     </div>
   </div>
 </nav>
 
-<div *ngIf="loaded">
+<div *ngIf="loaded && !this.viewSettings.readOnly">
   <div class="container">
 
-    <a href="#" class="btn btn-primary" data-toggle="modal" data-target="#myModal" *ngIf="radarDefinition.config.title.length > 0">Add Item</a>
+    <a href="#" id='addItemBtn' (click)="newItemMode='add'" class="btn btn-primary" data-toggle="modal" data-target="#myModal" *ngIf="radarDefinition.config.title.length > 0">Add Item</a>
+   
     <a href="#" class="btn btn-primary" data-toggle="modal" data-target="#configureModal" (click)="configureClick()">Configure</a>
     <a href="#" class="btn btn-default pull-right" data-toggle="modal" data-target="#sureModal">Delete</a>
     <a href="#" class="btn btn-success pull-right" data-toggle="modal" data-target="#configureModal" (click)="configureClick(true)">New radar</a>
   </div>
-
+</div>
+<div *ngIf="loaded">
+ <a style="" href="#" id='itemDetailsBtn' style="display:none" class="btn btn-primary" data-toggle="modal" data-target="#myModal" >test</a>
   <div id="myModal" class="modal">
     <div class="modal-dialog">
       <div class="modal-content">
         <div class="modal-header">
           <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
-          <h4 class="modal-title">Create Radar Item</h4>
+          <h4 *ngIf="!this.viewSettings.readOnly" class="modal-title">Create Radar Item</h4>
+          <h4 *ngIf="this.viewSettings.readOnly" class="modal-title">Radar Item Details</h4>
         </div>
         <div class="modal-body">
           <form class="form-horizontal">
-            <fieldset>
+            <fieldset *ngIf="!this.viewSettings.readOnly">
               <!--<legend>Legend</legend>-->
               <div class="form-group">
                 <label for="inputEmail" class="col-lg-2 control-label">Title</label>
@@ -64,12 +88,31 @@
                   <!--<span class="help-block">A longer block of help text that breaks onto a new line and may extend beyond one line.</span>-->
                 </div>
               </div>
+              <div class="form-group">
+                <label for="textArea" class="col-lg-2 control-label">Size</label>
+                <div class="col-lg-10">
+                  <input id="test" type="range" min="3" max="15" value="4" name="sizeSlider" [(ngModel)]="newItemSize"/>
+                  
+                  <!--<span class="help-block">A longer block of help text that breaks onto a new line and may extend beyond one line.</span>-->
+                </div>
+              </div>
+            </fieldset>
+             <fieldset *ngIf="this.viewSettings.readOnly">
+              <!--<legend>Legend</legend>-->
+              <div class="form-group">
+                <div class="col-lg-2">Title</div>
+                <div class="col-lg-10">{{newItemTitle}}</div>
+              </div>
+              <div class="form-group">
+                  <div class="col-lg-2">Description</div>
+                <div class="col-lg-10">{{newItemDesc}}</div>
+              </div>
             </fieldset>
           </form>
         </div>
         <div class="modal-footer">
           <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
-          <button type="button" class="btn btn-primary" (click)="addNewItem()" data-dismiss="modal">Save changes</button>
+          <button *ngIf="!this.viewSettings.readOnly" type="button" class="btn btn-primary" (click)="addNewItem()" data-dismiss="modal">Save changes</button>
         </div>
       </div>
     </div>
@@ -136,9 +179,9 @@
                 <div class="input-group">
                   <!--<span class="input-group-addon">$</span>-->
                   <div class="row">
-                    <div class="col-sm-6">
-                      <input name="slice{{i}}" type="text" class="form-control" [(ngModel)]="workingCopyRadarDefinition.config.slices[i].name"
-                        placeholder="slice name">
+ 
+                    <div class="col-sm-5">
+                      <input name="slice{{i}}" type="text" class="form-control" [(ngModel)]="workingCopyRadarDefinition.config.slices[i].name" placeholder="slice name">
                     </div>
 
                     <div class="col-sm-4"><input type="number"  class="form-control" min="1" max="100" step="1" name="slicePerc{{i}}" [(ngModel)]="workingCopyRadarDefinition.config.slices[i].perc"
@@ -148,6 +191,12 @@
                         (click)="removeSlice(workingCopyRadarDefinition.config.slices[i])">Remove</button>
                     </div>
                   </div>
+                    <div class="row" style="margin-top: 10px;">
+                      <div class="col-sm-3">bg color</div>
+                      <div class="col-sm-3"> <input type="color" value="#ffffff" name="slice{{i}}-color" [(ngModel)]="workingCopyRadarDefinition.config.slices[i].color">
+                      </div>
+                      <div class="col-sm-6"></div>
+                    </div>
                 </div>
               </div>
               <div class="pull-right">
@@ -159,7 +208,7 @@
                 <label class="col-lg-2 control-label">Stage {{i+1}}</label>
                 <div class="input-group">
                   <div class="row">
-                    <div class="col-sm-6">
+                    <div class="col-sm-5">
                       <input name="stage{{i}}" type="text" class="form-control" [(ngModel)]="workingCopyRadarDefinition.config.stages[i].name"
                         placeholder="stage name">
                     </div>
@@ -189,5 +238,32 @@
      
       </div>
     </div>
+  
+  
+  
   </div>
-</div>
+
+
+
+ <div id="signinModal" class="modal">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+          <h4 class="modal-title">Sign in</h4>
+        </div>
+        <div class="modal-body">
+
+<app-sign-in (signedin)='signedIn($event)'></app-sign-in>
+
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+          <button type="button" class="btn btn-primary" (click)="deleteClick()" data-dismiss="modal">Delete</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  </div>
+ 
