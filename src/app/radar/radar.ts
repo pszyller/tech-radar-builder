@@ -288,9 +288,11 @@ var d = {
             _this.dr.attr({ display: "none" });
         }
         item.size = item.size|| 4;
+        item.color = item.color|| '#FF0000';
+
         var c = this.s.circle(0, 0, item.size);
         c.attr({
-            fill: color,
+            fill: item.color,
             'fill-opacity': 1,
             stroke: "#FFFFFF",
             strokeWidth: 0.5

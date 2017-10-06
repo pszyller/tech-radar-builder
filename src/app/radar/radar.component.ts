@@ -30,6 +30,7 @@ export class RadarComponent implements OnInit {
 
   private newItemDesc: string;
   private newItemSize: number;
+  private newItemColor: string;
 
   constructor(private fService: FirebaseService) {
     this.viewSettings.readOnly = !fService.isAuth;
@@ -64,6 +65,7 @@ export class RadarComponent implements OnInit {
     this.newItemTitle = item.title;
     this.newItemDesc = item.desc;
     this.newItemSize = item.size;
+    this.newItemColor = item.color;
     this.newItemMode = 'edit';
 
     document.getElementById('itemDetailsBtn').click();
@@ -81,6 +83,7 @@ export class RadarComponent implements OnInit {
        this.editingItem.title = this.newItemTitle;
     this.editingItem.desc = this.newItemDesc;
     this.editingItem.size = this.newItemSize;
+    this.editingItem.color = this.newItemColor;
 
         this.techRadar.update(this.editingItem, oldName);
       return;
@@ -89,6 +92,7 @@ export class RadarComponent implements OnInit {
     newItem.title = this.newItemTitle;
     newItem.desc = this.newItemDesc;
     newItem.size = this.newItemSize;
+    newItem.color = this.newItemColor;
 
     this.techRadar.add(newItem, newItem.x, newItem.y, "#ff0000", true);
   }
@@ -203,7 +207,7 @@ export class RadarComponent implements OnInit {
 
   signedIn(uid)
   {
-    this.uid = this.uid;
+    this.uid = uid;
     window.location.href = window.location.href;
   }
 

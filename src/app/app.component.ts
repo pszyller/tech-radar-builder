@@ -26,13 +26,19 @@ ngOnInit() {
     this.route.queryParams.subscribe((params: Params) => {
          
          
-         if(window.location.href.indexOf('?') > 0 && this.init)
+         if(window.location.href.indexOf('?') > 0)
          {
-          this.init = false;
-          return;  
+            if(this.init)
+            {
+              this.init = false;
+              return;  
+            }
+            else
+            {
+              localStorage.setItem("uid", params['id']);
+            }
          }
          
-         localStorage.setItem("uid", params['id']);
          this.owner = params['id'];
          this.ready = true;
       });

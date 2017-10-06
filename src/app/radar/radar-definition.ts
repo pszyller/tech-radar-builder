@@ -38,6 +38,7 @@ export class RadarDataItemDef
     title: string;
     desc: string;
     size: number;
+    color: string;
     x: number;
     y: number;
 }
