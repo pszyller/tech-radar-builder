@@ -32,6 +32,15 @@ export class RadarConfig
     
 }
 
+export class HistoryItem
+{
+    log: string;
+    date: Date;
+    stageId: number;
+    x: number;
+    y: number;  
+}
+
 export class RadarDataItemDef
 {
     stageId: number;
@@ -41,6 +50,7 @@ export class RadarDataItemDef
     color: string;
     x: number;
     y: number;
+    history :Array<HistoryItem> = new Array<HistoryItem>();
 }
 
 export class RadarDataItem

@@ -54,7 +54,7 @@
 <div *ngIf="loaded && !this.viewSettings.readOnly">
   <div class="container">
 
-    <a href="#" id='addItemBtn' (click)="newItemMode='add'" class="btn btn-primary" data-toggle="modal" data-target="#myModal" *ngIf="radarDefinition.config.title.length > 0">Add Item</a>
+    <a href="#" id='addItemBtn' (click)="addItemClick();" class="btn btn-primary" data-toggle="modal" data-target="#myModal" *ngIf="radarDefinition.config.title.length > 0">Add Item</a>
    
     <a href="#" class="btn btn-primary" data-toggle="modal" data-target="#configureModal" (click)="configureClick()">Configure</a>
     <a href="#" class="btn btn-default pull-right" data-toggle="modal" data-target="#sureModal">Delete</a>
@@ -78,39 +78,62 @@
               <div class="form-group">
                 <label for="inputEmail" class="col-lg-2 control-label">Title</label>
                 <div class="col-lg-10">
-                  <input type="text" class="form-control" name="newItemTitle" [(ngModel)]="newItemTitle" id="title" placeholder="Title">
+                  <input type="text" class="form-control" name="newItemTitle" [(ngModel)]="itemWorkingCopy.title" id="title" placeholder="Title">
                 </div>
               </div>
               <div class="form-group">
                 <label for="textArea" class="col-lg-2 control-label">Description</label>
                 <div class="col-lg-10">
-                  <textarea class="form-control" rows="3" name="newItemDesc" [(ngModel)]="newItemDesc">dsfsf</textarea>
+                  <textarea class="form-control" rows="3" name="newItemDesc" [(ngModel)]="itemWorkingCopy.desc"></textarea>
                   <!--<span class="help-block">A longer block of help text that breaks onto a new line and may extend beyond one line.</span>-->
                 </div>
               </div>
               <div class="form-group">
                 <label for="textArea" class="col-lg-2 control-label">Size</label>
                 <div class="col-lg-10">
-                  <input id="test" type="range" min="3" max="15" value="4" name="sizeSlider" [(ngModel)]="newItemSize"/>
+                  <input id="test" type="range" min="3" max="15" value="4" name="sizeSlider" [(ngModel)]="itemWorkingCopy.size"/>
                 </div>
               </div>
               <div class="form-group">
                 <label for="textArea" class="col-lg-2 control-label">Color</label>
                 <div class="col-lg-10">
-                  <input type="color" value="#00ff00" name="dotColor" [(ngModel)]="newItemColor">
+                  <input type="color" value="#00ff00" name="dotColor" [(ngModel)]="itemWorkingCopy.color">
                 </div>
+              </div>
+              <div>History</div>
+              <div class="form-group" *ngFor="let histItem of itemWorkingCopy.history; let i = index;trackBy: trackByInd">
+                  <label for="textArea" class="col-lg-2 control-label">   {{ histItem.date | date: 'dd/MM/yyyy HH:mm' }}
+                      <button class="btn btn-primary" type="button" (click)="removeHistoryItem(i)">Remove</button>
+                  </label>
+            
+                                 <div class="col-lg-10">
+                                    <textarea class="form-control" rows="3" name="histLog" [(ngModel)]="itemWorkingCopy.history[i].log"></textarea>
+                                 </div>
               </div>
             </fieldset>
              <fieldset *ngIf="this.viewSettings.readOnly">
               <!--<legend>Legend</legend>-->
               <div class="form-group">
                 <div class="col-lg-2">Title</div>
-                <div class="col-lg-10">{{newItemTitle}}</div>
+                <div class="col-lg-10">{{itemWorkingCopy.title}}</div>
               </div>
               <div class="form-group">
                   <div class="col-lg-2">Description</div>
-                <div class="col-lg-10">{{newItemDesc}}</div>
+                <div class="col-lg-10">{{itemWorkingCopy.desc}}</div>
               </div>
+              <div class="form-group">
+                <div class="col-lg-2">History</div>
+                               <div class="col-lg-10">
+                                
+                                <div *ngFor="let histItem of itemWorkingCopy.history; let i = index;" >
+                                    <b>{{ histItem.date | date: 'dd/MM/yyyy HH:mm' }}</b>
+                                    <div>{{histItem.log}}</div>
+                                    <hr/>
+                                  </div> 
+                                
+
+                                </div>
+            </div>
             </fieldset>
           </form>
         </div>

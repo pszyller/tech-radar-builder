@@ -1,5 +1,6 @@
-import {RadarDefinition,RadarSlice,RadarStage,RadarDataItem,RadarDataItemDef} from './radar-definition';
+import {RadarDefinition,RadarSlice,RadarStage,RadarDataItem,RadarDataItemDef, HistoryItem} from './radar-definition';
 import * as _ from "lodash";
+import { Observable, Observer } from "rxjs/"
 declare var Snap: any;
 
 Snap.plugin(function (Snap, Element, Paper, glob) {
@@ -58,10 +59,11 @@ export class TechRadar {
     dr: any;
     readOnly: boolean;
 
+    onItemStageChange: any;
 
 
     constructor(radarData, scale, readOnly:boolean) {
-
+          
         this.readOnly = readOnly;
         var radarDefinition : RadarDefinition;
 var d = {
@@ -189,8 +191,6 @@ var d = {
             });
     }
 
-
-
     addUpdateListener(fn) {
         this.updateListeners.push(fn);
     }
@@ -234,15 +234,15 @@ var d = {
 
     update(item:RadarDataItemDef, oldName:string)
     {
-        debugger;
         var _this = this;
         _this.dr = null;
 
-     this.updateListeners.forEach(function (fn) {
+        this.updateListeners.forEach(function (fn) {
                             fn(_this.radarDefinition);
                         });
       _this.create(_this.size, _this.radarDefinition);
     }
+
     add(item : RadarDataItemDef, x, y, color, initBounce : boolean = false) {
         var _this = this;
         var dragObj = { matrix: { e: {}, f: {} } };
@@ -269,12 +269,12 @@ var d = {
         }
 
         var stop = function () {
-
+          
             if(!moved)
             {
                 if(_this.editItem)
                 {
-
+                
                    _this.editItem(item);
                    return;
                 }
@@ -310,15 +310,8 @@ var d = {
         if (!_this.radarAnimation)
             g.transform('t' + x + ',' + y);
         g.add(c, ct);
-        g.radarItem =
-            {
-                title: item.title,
-                desc: item.desc,
-                size : item.size
-            };
-
-
-
+        g.radarItem = _.cloneDeep(item);
+            
         if (!this.readOnly) {
             g.drag(move, start, stop);
             g.attr({ 'cursor': 'move' });
@@ -627,6 +620,31 @@ debugger;
                         }
 
                         var newItem = <RadarDataItemDef>_this.dr.radarItem;
+
+                        if(newItem.stageId != stagei)
+                        {
+                            var oldS =
+                            _.find(_this.radarDefinition.config.stages, function (e: RadarStage) {
+                                return e.id == newItem.stageId;
+                            });
+                            var newS =
+                            _.find(_this.radarDefinition.config.stages, function (e: RadarStage) {
+                                return e.id == stagei;
+                            });
+
+                            var hi = new HistoryItem();
+                            hi.date = new Date();
+                            hi.log = "Move from " + oldS.name + " to " + newS.name;
+                            hi.x = newItem.x;
+                            hi.y = newItem.y;
+                          
+                            if(!newItem.history)
+                            {
+                                newItem.history = new Array<HistoryItem>();
+                            }
+                          newItem.history.push(hi);
+                        }
+
                         newItem.stageId= stagei;
                         newItem.x = _this.dr.matrix.e;
                         newItem.y = _this.dr.matrix.f;

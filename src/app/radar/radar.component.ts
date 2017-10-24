@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit,NgZone } from '@angular/core';
 import * as _ from "lodash";
 import { TechRadar } from './radar';
 import { RadarDefinition, RadarDataItemDef, RadarStage, RadarSlice, ScalableItem, ViewSettings } from './radar-definition';
@@ -17,9 +17,9 @@ export class RadarComponent implements OnInit {
   techRadar: TechRadar;
   radarDefinition: RadarDefinition
   workingCopyRadarDefinition: RadarDefinition
-  newItemTitle: string;
   newItemMode :string;
   editingItem : RadarDataItemDef;
+  itemWorkingCopy : RadarDataItemDef = new RadarDataItemDef();
   uid: string;
   radars: Array<RadarDefinition>;
   loaded: boolean = false;
@@ -27,12 +27,9 @@ export class RadarComponent implements OnInit {
   firebaseService: FirebaseService;
   json: string = "test";
   viewSettings: ViewSettings = new ViewSettings();
-
-  private newItemDesc: string;
-  private newItemSize: number;
-  private newItemColor: string;
-
-  constructor(private fService: FirebaseService) {
+  
+  constructor(private fService: FirebaseService, private zone: NgZone) {
+  
     this.viewSettings.readOnly = !fService.isAuth;
     this.uid = localStorage.getItem("uid");
     this.firebaseService = fService;
@@ -61,14 +58,15 @@ export class RadarComponent implements OnInit {
 
   editItem(item : RadarDataItemDef)
   {
-    this.editingItem = item;
-    this.newItemTitle = item.title;
-    this.newItemDesc = item.desc;
-    this.newItemSize = item.size;
-    this.newItemColor = item.color;
+  console.log(item.title);
     this.newItemMode = 'edit';
-
-    document.getElementById('itemDetailsBtn').click();
+    this.editingItem = item;
+  
+    this.itemWorkingCopy = _.cloneDeep(item);
+    this.zone.run(()=>{
+  document.getElementById('itemDetailsBtn').click();
+});
+   
   }
 
   addNewItem() {
@@ -76,23 +74,25 @@ export class RadarComponent implements OnInit {
     let newItem = new RadarDataItemDef();
     newItem.x = 500;
     newItem.y = 100;
-    debugger;
+    
     if(this.newItemMode == 'edit')
     {
+     
       var oldName = this.editingItem.title;
-       this.editingItem.title = this.newItemTitle;
-    this.editingItem.desc = this.newItemDesc;
-    this.editingItem.size = this.newItemSize;
-    this.editingItem.color = this.newItemColor;
+    this.editingItem.title = this.itemWorkingCopy.title;
+    this.editingItem.desc = this.itemWorkingCopy.desc;
+    this.editingItem.size = this.itemWorkingCopy.size;
+    this.editingItem.color = this.itemWorkingCopy.color;
+    this.editingItem.history = this.itemWorkingCopy.history;
 
-        this.techRadar.update(this.editingItem, oldName);
+    this.techRadar.update(this.editingItem, oldName);
       return;
     }
-
-    newItem.title = this.newItemTitle;
-    newItem.desc = this.newItemDesc;
-    newItem.size = this.newItemSize;
-    newItem.color = this.newItemColor;
+    
+    newItem.title = this.itemWorkingCopy.title;
+    newItem.desc = this.itemWorkingCopy.desc;
+    newItem.size = this.itemWorkingCopy.size;
+    newItem.color = this.itemWorkingCopy.color;
 
     this.techRadar.add(newItem, newItem.x, newItem.y, "#ff0000", true);
   }
@@ -104,6 +104,7 @@ export class RadarComponent implements OnInit {
   }
 
   createRadar(radar: RadarDefinition) {
+   
     this.techRadar = new TechRadar(radar, 1, this.viewSettings.readOnly);
   
 
@@ -113,6 +114,7 @@ export class RadarComponent implements OnInit {
     });
     this.techRadar.editItem = (itm) =>
     {
+      debugger;
       this.editItem(itm);
     }
   }
@@ -140,6 +142,12 @@ export class RadarComponent implements OnInit {
 
     this.firebaseService.updateRadar(this.uid, this.radarDefinition);
     this.createRadar(this.radarDefinition);
+  }
+
+  addItemClick()
+  {
+    this.newItemMode='add';
+    this.itemWorkingCopy = new RadarDataItemDef();
   }
 
   configureClick(isNew: boolean) {
@@ -182,6 +190,10 @@ export class RadarComponent implements OnInit {
     this.resetPerc(this.workingCopyRadarDefinition.config.stages, true);
   }
 
+  removeHistoryItem(index: number)
+  {
+    this.itemWorkingCopy.history.splice(index, 1);
+  }
   removeSlice(slice: string) {
 
     this.workingCopyRadarDefinition.config.slices =
