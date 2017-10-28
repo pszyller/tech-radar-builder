@@ -1,9 +1,12 @@
 import { AngularFire, FirebaseAuthState, AuthProviders, AuthMethods, FirebaseListObservable } from 'angularfire2';
-import { Injectable } from '@angular/core';
+import { Injectable  } from '@angular/core';
+import { Subject } from "rxjs/"
 
 @Injectable()
 export class FirebaseService {
   items: FirebaseListObservable<any[]>;
+  error: Subject<string> = new Subject<string>();
+  userLogin: Subject<string> = new Subject<string>();
   angularFire: AngularFire;
   isAuth : boolean;
   constructor(af: AngularFire) {
@@ -11,6 +14,10 @@ export class FirebaseService {
     this.angularFire.auth.subscribe( (state)=>
     {
       this.isAuth = state != null;     
+      if(this.isAuth)
+      {
+        this.userLogin.next(state.auth.displayName);
+      }
     });
   //  this.items = af.database.list('/radars');
   }
@@ -34,7 +41,7 @@ export class FirebaseService {
 
   }  
       updateRadar(uid: string, radar: any) {
-debugger;
+
         if((radar.key || '').length == 0)
         {
            this.angularFire.database.list('/radars/' + uid).push(JSON.stringify(radar)).then(r=>
@@ -45,8 +52,12 @@ debugger;
         }
         else
         {
+
           var item = this.angularFire.database.object('/radars/' + uid + '/' + radar.key);
-          item.set(JSON.stringify(radar)).then(()=>{}, (err:any)=>{ alert(err); });
+          item.set(JSON.stringify(radar)).then(()=>{}, (err:any)=>
+          {
+            this.error.next(err);
+          });
         }     
     } 
 

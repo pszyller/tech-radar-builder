@@ -58,9 +58,10 @@ export class TechRadar {
     itemDescription: any;
     dr: any;
     readOnly: boolean;
-
+    lockRadarMove:boolean;
     onItemStageChange: any;
-
+    group: any;
+    scalar:number = 1;
 
     constructor(radarData, scale, readOnly:boolean) {
           
@@ -143,8 +144,55 @@ var d = {
             {
                 id: 'radar',
                 width: '100%',
-                viewBox: "0,0," + this.vbSize + "," + this.vbSize
+          //      transform: 's' + this.scale,
+                viewBox: "0,0," + this.vbSize + "," + this.vbSize,
             });
+            debugger;
+            
+            var _this = this;
+            this.s.mousemove( function(ev,x,y,c,b)
+            {
+                console.log(ev.movementX + ' b:' + ev.buttons);
+            
+                if(ev.buttons > 0 && !_this.lockRadarMove)
+                {
+           
+                    _this.group.transform('S'+_this.scalar+' 0 0 T' + (_this.group.matrix.e + ev.movementX) + ',' + (_this.group.matrix.f + ev.movementY));
+                  
+                }
+            } );
+
+            if( (/Firefox/i.test(navigator.userAgent)) ) {
+                this.s.node.addEventListener("DOMMouseScroll", mouseWheelHandler, false);
+            } else {
+                this.s.node.addEventListener("mousewheel", mouseWheelHandler, false);
+            }
+            
+            function mouseWheelHandler (ev) { 
+                ev.preventDefault();
+                
+                if(ev.deltaY < 0)
+                {
+                    if(_this.scalar < 3.5)
+                    _this.scalar-= ev.deltaY/1000;
+                    else
+                    return;
+                }
+                else
+                {
+                    if(_this.scalar > 0.5)
+                    _this.scalar-= ev.deltaY/1000;
+                    else
+                    return;
+                }
+                console.log('scale: ' + _this.scalar);
+
+
+                _this.group.transform('s'+_this.scalar+' 0 0 T' + (_this.group.matrix.e + ev.deltaY) + ',' + (_this.group.matrix.f + ev.deltaY));
+                _this.create(_this.size, radarData);
+            }
+
+
 
         this.scale = scale;
         this.size = 2000 * scale;
@@ -183,12 +231,7 @@ var d = {
     }
 
     zoom(val) {
-        this.s.attr(
-            {
-                id: 'radar',
-                width: '100%',
-                viewBox: "0,0," + (this.vbSize * val / 100) + "," + (this.vbSize * val / 100)
-            });
+       this.scale+=0.1;
     }
 
     addUpdateListener(fn) {
@@ -197,7 +240,20 @@ var d = {
 
     create(size, radarDef) {
         var _this = this;
+        var saveTransform = 'S'+ this.scalar+' 0 0 T0,0';
+
+        debugger;
+        if(this.s.select("#main"))
+        {
+           saveTransform = this.s.select("#main").attr('transform').string;
+        }
+        
         this.s.clear();
+        this.group = this.s.paper.g()
+        this.group.attr('transform', saveTransform);
+        //this.group.attr('transform', 'S'+ this.scalar+' 0 0 T0,0');
+        this.scale = 1;
+        this.group.attr("id", "main");
         this.map = {};
         this.radarDefinition = radarDef;
         this.canvasSize = size;
@@ -211,24 +267,20 @@ var d = {
 
         if(this.radarDefinition.config.showItemsList)
         {
-            this.drawListing();
+          //  this.drawListing();
         }
         this.itemDescription = this.s.g();
-        // this.itemDescription.add(this.s.rect(0, 0, 300, 100,20).attr({   fill: "#ffffff", stroke: "#050505",
-        //     strokeWidth: 1,
-        //          "fill-opacity" : 0.9})).attr({ id: "itemDescription"});
-
+        
         this.itemDescription.show = function (title, desc, x, y) {
             var t = this;
 
-            //    if(t.attr("display") != "none")
-            //    return;
 
             t.selectAll("text").remove();
-            var ctt = _this.s.multitext(0, 0, title, 500 * _this.scale, { "font-size": (30 * _this.scale) + "px" });
-            var ct = _this.s.multitext(0, 50 * _this.scale, desc, 500 * _this.scale, { "font-size": (25 * _this.scale) + "px" });
+            var ctt = _this.s.multitext(0, 0, title, 700 * _this.scale, { "font-size": (30 * _this.scale) + "px" });
+            var ct = _this.s.multitext(0, 50 * _this.scale, desc, 700 * _this.scale, { "font-size": (25 * _this.scale) + "px" });
             t.add(ctt, ct);
             t.attr('transform', 't' + (x * _this.scale) + ',' + (y * _this.scale));
+        
         }
     }
 
@@ -250,8 +302,8 @@ var d = {
         var moved = false;
 
         var move = function (dx, dy) {
-            dx *= 2000 / window.innerWidth;
-            dy *= 2000 / window.innerWidth;
+            dx *= 2000 / window.innerWidth / _this.scalar;
+            dy *= 2000 / window.innerWidth /  _this.scalar;
             //_this.itemDescription.attr({ "display": "none" });
            
            if(dx > 0 || dy > 0)
@@ -262,6 +314,7 @@ var d = {
         }
 
         var start = function (e,f) {
+            _this.lockRadarMove = true;
             dragObj = this;
             moved = false;
               
@@ -269,7 +322,7 @@ var d = {
         }
 
         var stop = function () {
-          
+            _this.lockRadarMove = false;
             if(!moved)
             {
                 if(_this.editItem)
@@ -297,19 +350,27 @@ var d = {
             stroke: "#FFFFFF",
             strokeWidth: 0.5
         });
-        if(initBounce)
-        {
-        Snap.animate(600, 100, function (val) {
-                c.transform('s' + (val/100));
-            }, 500, mina.elastic);
-        }
+        this.group.add(c);
 
 
-        var ct = this.s.multitext(6 + item.size, 5, item.title, 150, { "font-size": (15 * _this.scale) + "px" });
+        // if(initBounce)
+        // {
+        // Snap.animate(600, 100, function (val) {
+        //         c.transform('s' + (val/100));
+        //     }, 500, mina.elastic);
+        // }
 
+        var threshold = _this.scalar * item.size > 6;
+        if(threshold)
+        var ct = this.s.multitext(6 + item.size, 5, item.title, 150, { "font-size": Math.max(12 / _this.scalar, 10) + "px" });
+        
         if (!_this.radarAnimation)
             g.transform('t' + x + ',' + y);
-        g.add(c, ct);
+        g.add(c);
+        
+        if(threshold)
+        g.add(ct);
+
         g.radarItem = _.cloneDeep(item);
             
         if (!this.readOnly) {
@@ -322,27 +383,32 @@ var d = {
             {
                 if(_this.editItem)
                 {
-                                        debugger;
+                    debugger;
                    _this.editItem(item);
                 }
             });
              
         }
-
+this.group.add(g);
         g.hover(function () {
             //  _this.itemDescription.attr({x: g.matrix.e, y:g.matrix.f - 250, "display": ""});
-            _this.itemDescription.show(g.radarItem.title, g.radarItem.desc, 50, 150);
-
+          //  _this.itemDescription.show(g.radarItem.title, g.radarItem.desc, 50, 150);
+            
             Snap.animate(1, 2, function (val) {
+               
                 c.transform('s' + val);
-            }, 500, mina.bounce);
+            }, 1000, mina.elastic, function()
+            {
+               
+            });
 
         }, function () {
             //_this.itemDescription.attr({ "display": "none" });
 
-            Snap.animate(2, 1, function (val) {
+            Snap.animate(c.matrix.d, 1, function (val) {
+              debugger;
                 c.transform('s' + val);
-            }, 500, mina.bounce);
+            }, 1000, mina.bounce);
 
         });
         if (_this.radarAnimation) {
@@ -350,7 +416,7 @@ var d = {
                 var nx = (_this.centre.x - (_this.centre.x * val / 100)) + (x * val / 100);
                 var ny = (_this.centre.y - (_this.centre.y * val / 100)) + (y * val / 100);
                 g.transform('t' + nx + ',' + ny);
-            }, 500, mina.linear);
+            }, 1000, mina.bounce);
         } else {
 
         }
@@ -392,6 +458,7 @@ var d = {
 
             }, 100 + (radius * 5), mina.backout);
         }
+        this.group.add(arc);
         return arc;
     }
 
@@ -462,11 +529,14 @@ debugger;
             column.i++;
             if(!elem)
             return;
+
+            var t =
             _this.s.text(bullet.x, bullet.y, elem.name).attr({
                 'fill': bullet.col, 'stroke': '#000000', 'stroke-width': 0.0,
                 "font-size": "20px",
                 "font-family": "Arial"
             });
+            this.group.add(t);
 
             var currentStage = { stageId: -1 };
             _.forEach(_.sortBy(slice.data, function (c: RadarDataItemDef) {
@@ -496,13 +566,13 @@ debugger;
                             'font-family': "Arial",
                             'fill': '#000000', 'stroke': '#000000', 'stroke-width': 0.0,
                         });
-               
+                    this.group.add(b);
                     bullet.y += 30;
                 }
 
         
         
-
+                var circle =
                 _this.s.circle(bullet.x, bullet.y, 4)
                     .attr({
                         fill: bullet.col,
@@ -511,18 +581,18 @@ debugger;
                         "font-family": "Arial",
                         strokeWidth: 1
                     });
-
+                this.group.add(circle);
                 var title = _this.s.text(bullet.x + 20, bullet.y + 5, stage.title).attr(
                     {
                         fill: bullet.col,
                         "font-size": "15px",
                     });
-
+                    this.group.add(title);
                 var desc = _this.s.multitext(bullet.x + 20, bullet.y + 5, stage.title + ' ' + (stage.desc ? ' - ' + stage.desc : ''), column.width - 50,
                     {
                         "font-size": "15px",
                     });
-
+                    this.group.add(desc);
                 // _this.s.text(bullet.x +20, bullet.y + 5, stage.title + (stage.desc ? ' - ' : '') + stage.desc).attr(
                 //     {
                 //            "font-family" : "Arial"
@@ -567,9 +637,9 @@ debugger;
                     
                     "font-family": "Arial"
                 });
-                
+            _this.group.add(t1);
         }, "#DDDDDD", 0);
-
+    
         var rSum = 0;
         for (var i = 0; i < stagesLength; i++) {
             // _this.radius = this.canvasSize / 2.5;
@@ -597,6 +667,7 @@ debugger;
                         "text-anchor": "middle",
                         "font-family": "Arial"
                     });
+                    _this.group.add(t1);
                 //  t1.transform('r' + (360/slicesLength*i) + ',' + _this.centre + ',' + _this.centre);
 
                 elem.hover(function () {
@@ -634,7 +705,11 @@ debugger;
 
                             var hi = new HistoryItem();
                             hi.date = new Date();
+                            if(oldS)
                             hi.log = "Move from " + oldS.name + " to " + newS.name;
+                            else
+                            hi.log = "Added as " + newS.name;
+
                             hi.x = newItem.x;
                             hi.y = newItem.y;
                           
@@ -700,6 +775,7 @@ debugger;
                    //  strokeLinecap: "round",
                         filter: f,
             });
+            this.group.add(c);
             rSum += ringWidth;
         }
 
@@ -715,6 +791,7 @@ debugger;
                      filter: f
                 });
             line.transform('r' + rotSum + ',' + this.centre.x + ',' + this.centre.y);
+            this.group.add(line);
             rotSum +=rot;
         }
 

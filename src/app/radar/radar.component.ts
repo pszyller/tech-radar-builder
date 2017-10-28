@@ -27,12 +27,22 @@ export class RadarComponent implements OnInit {
   firebaseService: FirebaseService;
   json: string = "test";
   viewSettings: ViewSettings = new ViewSettings();
-  
+  infoModalMsg: string;
+  userDisplayName: string;
+
   constructor(private fService: FirebaseService, private zone: NgZone) {
   
     this.viewSettings.readOnly = !fService.isAuth;
     this.uid = localStorage.getItem("uid");
     this.firebaseService = fService;
+    fService.error.subscribe((err:any)=>
+    {
+      this.infoModalMsg = err;
+    });
+    fService.userLogin.subscribe((displayName:string)=>
+    {
+      this.userDisplayName = displayName;
+    });
   }
 
   ngOnInit() {
@@ -103,9 +113,9 @@ export class RadarComponent implements OnInit {
     this.createRadar(radar);
   }
 
-  createRadar(radar: RadarDefinition) {
+  createRadar(radar: RadarDefinition, s : number = 1) {
    
-    this.techRadar = new TechRadar(radar, 1, this.viewSettings.readOnly);
+    this.techRadar = new TechRadar(radar, s, this.viewSettings.readOnly);
   
 
     this.techRadar.addUpdateListener(s => {
@@ -226,8 +236,9 @@ export class RadarComponent implements OnInit {
   editClick()
   {
     this.viewSettings.readOnly = !this.viewSettings.readOnly;
-
-    this.createRadar(this.radars[0]);
+    this.techRadar.readOnly = this.viewSettings.readOnly;
+    this.techRadar.create(this.techRadar.size, this.techRadar.radarDefinition);
+    //this.createRadar(this.radars[0]);
     
   }
 

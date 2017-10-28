@@ -1,68 +1,87 @@
-<div id="main-header">
-                        
-            
-            <div id="title-heading" class="pagetitle with-breadcrumbs">
-                
-                    <div id="breadcrumb-section">
-                    </div>
-                
-                
 
-                <h1 id="title-text" class="with-breadcrumbs">{{ radarDefinition ? radarDefinition.config.title : "..."}}</h1>
-            </div>
+<div *ngIf="!uid">
+    <app-sign-in (signedin)='signedIn($event)'></app-sign-in>
 </div>
 
-<nav class="navbar navbar-default"  >
+
+<div *ngIf="uid" >
+<div id="main-header">
+
+
+  <div id="title-heading" class="pagetitle with-breadcrumbs">
+
+    <div id="breadcrumb-section">
+    </div>
+
+
+
+    <h1 id="title-text" class="with-breadcrumbs">{{ radarDefinition ? radarDefinition.config.title : "..."}}</h1>
+
+  </div>
+</div>
+<div></div>
+<nav class="navbar navbar-default">
   <div class="container-fluid">
     <!--<div class="navbar-header">
-      <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#bs-example-navbar-collapse-1">
-        <span class="sr-only">Toggle navigation</span>
-        <span class="icon-bar"></span>
-        <span class="icon-bar"></span>
-        <span class="icon-bar"></span>
-      </button>
+<button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#bs-example-navbar-collapse-1">
+<span class="sr-only">Toggle navigation</span>
+<span class="icon-bar"></span>
+<span class="icon-bar"></span>
+<span class="icon-bar"></span>
+</button>
 
-    </div>-->
+</div>-->
 
     <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
       <ul class="nav navbar-nav" style="background-color: transparent">
         <!--<li class="active"><a href="#">Add <span class="sr-only">(current)</span></a></li>
-        <li><a href="#">Link</a></li>-->
+<li><a href="#">Link</a></li>-->
         <li class="dropdown">
-          <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-expanded="false">Your Radars<span class="caret"></span></a>
+          <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-expanded="false">Your Radars
+            <span class="caret"></span>
+          </a>
           <ul class="dropdown-menu" role="menu">
-            <li *ngFor="let item of radars"><a href="#" (click)="changeRadar(item)">{{item.config.title}}</a></li>
+            <li *ngFor="let item of radars">
+              <a href="#" (click)="changeRadar(item)">{{item.config.title}}</a>
+            </li>
+            <li>
+              <a href="#" data-toggle="modal" data-target="#configureModal" (click)="configureClick(true)">New radar</a>
+            </li>
           </ul>
 
         </li>
 
       </ul>
 
+      <ul *ngIf="loaded && !this.viewSettings.readOnly" class="nav navbar-nav navbar-left">
+        <li>
+          <a href="#" data-toggle="modal" data-target="#sureModal">Delete</a>
+        </li>
+        <li>
+          <a href="#" data-toggle="modal" data-target="#configureModal" (click)="configureClick()">Configure</a>
+        </li>
+        <li>
+          <a href="#" id='addItemBtn' (click)="addItemClick();" data-toggle="modal" data-target="#myModal" *ngIf="radarDefinition.config.title.length > 0">Add Item</a>
+        </li>
+      </ul>
+
+
       <ul class="nav navbar-nav navbar-right">
-        <li *ngIf="firebaseService.isAuth"><a href="#" (click)="editClick()">Edit</a></li>
-        <li *ngIf="!firebaseService.isAuth" data-toggle="modal" data-target="#signinModal"><a href="#" >Sign in</a></li>
-        <li *ngIf="firebaseService.isAuth" ><a href="#" (click)="signOut()">Sign out</a></li>
-        <li><a href="#" onclick="window.open(window.location.href)">Full screen</a></li>
-
-
-
+        <li *ngIf="firebaseService.isAuth">
+          <a href="#" (click)="editClick()">Edit</a>
+        </li>
+        <li>
+          <a href="#" onclick="window.open(window.location.href)">Full screen</a>
+        </li>
+        <li *ngIf="firebaseService.isAuth">
+            <a href="#" (click)="signOut()">Sign out [{{userDisplayName}}]</a>
+          </li>
       </ul>
     </div>
   </div>
 </nav>
-
-<div *ngIf="loaded && !this.viewSettings.readOnly">
-  <div class="container">
-
-    <a href="#" id='addItemBtn' (click)="addItemClick();" class="btn btn-primary" data-toggle="modal" data-target="#myModal" *ngIf="radarDefinition.config.title.length > 0">Add Item</a>
-   
-    <a href="#" class="btn btn-primary" data-toggle="modal" data-target="#configureModal" (click)="configureClick()">Configure</a>
-    <a href="#" class="btn btn-default pull-right" data-toggle="modal" data-target="#sureModal">Delete</a>
-    <a href="#" class="btn btn-success pull-right" data-toggle="modal" data-target="#configureModal" (click)="configureClick(true)">New radar</a>
-  </div>
-</div>
 <div *ngIf="loaded">
- <a style="" href="#" id='itemDetailsBtn' style="display:none" class="btn btn-primary" data-toggle="modal" data-target="#myModal" >test</a>
+  <a style="" href="#" id='itemDetailsBtn' style="display:none" class="btn btn-primary" data-toggle="modal" data-target="#myModal">test</a>
   <div id="myModal" class="modal">
     <div class="modal-dialog">
       <div class="modal-content">
@@ -91,7 +110,7 @@
               <div class="form-group">
                 <label for="textArea" class="col-lg-2 control-label">Size</label>
                 <div class="col-lg-10">
-                  <input id="test" type="range" min="3" max="15" value="4" name="sizeSlider" [(ngModel)]="itemWorkingCopy.size"/>
+                  <input id="test" type="range" min="3" max="15" value="4" name="sizeSlider" [(ngModel)]="itemWorkingCopy.size" />
                 </div>
               </div>
               <div class="form-group">
@@ -102,38 +121,38 @@
               </div>
               <div>History</div>
               <div class="form-group" *ngFor="let histItem of itemWorkingCopy.history; let i = index;trackBy: trackByInd">
-                  <label for="textArea" class="col-lg-2 control-label">   {{ histItem.date | date: 'dd/MM/yyyy HH:mm' }}
-                      <button class="btn btn-primary" type="button" (click)="removeHistoryItem(i)">Remove</button>
-                  </label>
-            
-                                 <div class="col-lg-10">
-                                    <textarea class="form-control" rows="3" name="histLog" [(ngModel)]="itemWorkingCopy.history[i].log"></textarea>
-                                 </div>
+                <label for="textArea" class="col-lg-2 control-label"> {{ histItem.date | date: 'dd/MM/yyyy HH:mm' }}
+                  <button class="btn btn-primary" type="button" (click)="removeHistoryItem(i)">Remove</button>
+                </label>
+
+                <div class="col-lg-10">
+                  <textarea class="form-control" rows="3" name="histLog{{i}}" [(ngModel)]="itemWorkingCopy.history[i].log"></textarea>
+                </div>
               </div>
             </fieldset>
-             <fieldset *ngIf="this.viewSettings.readOnly">
+            <fieldset *ngIf="this.viewSettings.readOnly">
               <!--<legend>Legend</legend>-->
               <div class="form-group">
                 <div class="col-lg-2">Title</div>
                 <div class="col-lg-10">{{itemWorkingCopy.title}}</div>
               </div>
               <div class="form-group">
-                  <div class="col-lg-2">Description</div>
+                <div class="col-lg-2">Description</div>
                 <div class="col-lg-10">{{itemWorkingCopy.desc}}</div>
               </div>
               <div class="form-group">
                 <div class="col-lg-2">History</div>
-                               <div class="col-lg-10">
-                                
-                                <div *ngFor="let histItem of itemWorkingCopy.history; let i = index;" >
-                                    <b>{{ histItem.date | date: 'dd/MM/yyyy HH:mm' }}</b>
-                                    <div>{{histItem.log}}</div>
-                                    <hr/>
-                                  </div> 
-                                
+                <div class="col-lg-10">
 
-                                </div>
-            </div>
+                  <div *ngFor="let histItem of itemWorkingCopy.history; let i = index;">
+                    <b>{{ histItem.date | date: 'dd/MM/yyyy HH:mm' }}</b>
+                    <div>{{histItem.log}}</div>
+                    <hr/>
+                  </div>
+
+
+                </div>
+              </div>
             </fieldset>
           </form>
         </div>
@@ -167,7 +186,7 @@
       </div>
     </div>
   </div>
-   <!--<textarea rows="10" cols="100">{{json}}</textarea>-->
+  <!--<textarea rows="10" cols="100">{{json}}</textarea>-->
   <div id="configureModal" class="modal">
     <div class="modal-dialog">
       <div class="modal-content">
@@ -185,7 +204,7 @@
                 <div class="col-lg-10">
                   <input name="slice{{i}}" type="text" class="form-control" name="radarName" [(ngModel)]="workingCopyRadarDefinition.config.title"
                     placeholder="radar name">
-        
+
                 </div>
               </div>
               <div class="form-group">
@@ -194,8 +213,8 @@
 
                   <div class="checkbox">
                     <label>
-            <input type="checkbox" name="showItemsList" [(ngModel)]="workingCopyRadarDefinition.config.showItemsList"> (shows all items with descriptions under the radar)
-          </label>
+                      <input type="checkbox" name="showItemsList" [(ngModel)]="workingCopyRadarDefinition.config.showItemsList"> (shows all items with descriptions under the radar)
+                    </label>
                   </div>
                 </div>
               </div>
@@ -206,24 +225,28 @@
                 <div class="input-group">
                   <!--<span class="input-group-addon">$</span>-->
                   <div class="row">
- 
+
                     <div class="col-sm-5">
-                      <input name="slice{{i}}" type="text" class="form-control" [(ngModel)]="workingCopyRadarDefinition.config.slices[i].name" placeholder="slice name">
+                      <input name="slice{{i}}" type="text" class="form-control" [(ngModel)]="workingCopyRadarDefinition.config.slices[i].name"
+                        placeholder="slice name">
                     </div>
 
-                    <div class="col-sm-4"><input type="number"  class="form-control" min="1" max="100" step="1" name="slicePerc{{i}}" [(ngModel)]="workingCopyRadarDefinition.config.slices[i].perc"
-                     (change)="percChanged($event, i, workingCopyRadarDefinition.config.slices)" /></div> 
+                    <div class="col-sm-4">
+                      <input type="number" class="form-control" min="1" max="100" step="1" name="slicePerc{{i}}" [(ngModel)]="workingCopyRadarDefinition.config.slices[i].perc"
+                        (change)="percChanged($event, i, workingCopyRadarDefinition.config.slices)" />
+                    </div>
                     <div class="col-sm-2">
                       <button class="btn btn-primary" type="button" [disabled]="!canRemoveSlices()" [ngClass]="{disabled: !canRemoveSlices()}"
                         (click)="removeSlice(workingCopyRadarDefinition.config.slices[i])">Remove</button>
                     </div>
                   </div>
-                    <div class="row" style="margin-top: 10px;">
-                      <div class="col-sm-3">bg color</div>
-                      <div class="col-sm-3"> <input type="color" value="#ffffff" name="slice{{i}}-color" [(ngModel)]="workingCopyRadarDefinition.config.slices[i].color">
-                      </div>
-                      <div class="col-sm-6"></div>
+                  <div class="row" style="margin-top: 10px;">
+                    <div class="col-sm-3">bg color</div>
+                    <div class="col-sm-3">
+                      <input type="color" value="#ffffff" name="slice{{i}}-color" [(ngModel)]="workingCopyRadarDefinition.config.slices[i].color">
                     </div>
+                    <div class="col-sm-6"></div>
+                  </div>
                 </div>
               </div>
               <div class="pull-right">
@@ -239,11 +262,13 @@
                       <input name="stage{{i}}" type="text" class="form-control" [(ngModel)]="workingCopyRadarDefinition.config.stages[i].name"
                         placeholder="stage name">
                     </div>
-                    <div class="col-sm-4"><input type="number" class="form-control" min="1" max="100" step="1" name="stagePerc{{i}}" (change)="percChanged($event, i, workingCopyRadarDefinition.config.stages )"
-                        [(ngModel)]="workingCopyRadarDefinition.config.stages[i].perc" /></div>
+                    <div class="col-sm-4">
+                      <input type="number" class="form-control" min="1" max="100" step="1" name="stagePerc{{i}}" (change)="percChanged($event, i, workingCopyRadarDefinition.config.stages )"
+                        [(ngModel)]="workingCopyRadarDefinition.config.stages[i].perc" />
+                    </div>
                     <div class="col-sm-2">
                       <button class="btn btn-primary" type="button" [disabled]="!canRemoveStages()" [ngClass]="{disabled: !canRemoveStages()}"
-                        (click)="removeStage(workingCopyRadarDefinition.config.stages[i])">Remove</button> 
+                        (click)="removeStage(workingCopyRadarDefinition.config.stages[i])">Remove</button>
                     </div>
                   </div>
 
@@ -262,34 +287,30 @@
           <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
           <button type="button" class="btn btn-primary" (click)="saveConfig()" data-dismiss="modal">Save changes</button>
         </div>
-     
+
       </div>
     </div>
-  
-  
-  
+
   </div>
 
-
-
- <div id="signinModal" class="modal">
-    <div class="modal-dialog">
-      <div class="modal-content">
-        <div class="modal-header">
-          <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
-          <h4 class="modal-title">Sign in</h4>
-        </div>
-        <div class="modal-body">
-
-<app-sign-in (signedin)='signedIn($event)'></app-sign-in>
-
-        </div>
-        <div class="modal-footer">
-          <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+  <div id="msgBox" class="modal" [style.display]="infoModalMsg ? 'block' : 'none'">
+      <div class="modal-dialog">
+        <div class="modal-content">
+          <div class="modal-header">
+            <button type="button" class="close" (click)="infoModalMsg = null;" data-dismiss="modal" aria-hidden="true">&times;</button>
+            <h4 class="modal-title">Info</h4>
+          </div>
+          <div class="modal-body">
+              {{ infoModalMsg }}
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-default" (click)="infoModalMsg = null;" data-dismiss="modal">Close</button>
+          </div>
         </div>
       </div>
     </div>
-  </div>
 
-  </div>
- 
+
+
+</div>
+</div>
