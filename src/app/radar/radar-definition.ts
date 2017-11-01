@@ -17,6 +17,7 @@ export class RadarSlice extends ScalableItem
     public constructor(init?:Partial<RadarSlice>) {
         super();
         Object.assign(this, init);
+        this.color = "#EEEEEE";
     }
 }
 
@@ -47,7 +48,8 @@ export class RadarDataItemDef
     title: string;
     desc: string;
     size: number;
-    color: string;
+    shape: string = "circle.svg";
+    color: string = "#FF0000";
     x: number;
     y: number;
     history :Array<HistoryItem> = new Array<HistoryItem>();
@@ -62,7 +64,7 @@ export class RadarDataItem
 export class RadarDefinition
 {   
     key: string;
-    config : RadarConfig;
+    config : RadarConfig = new RadarConfig();
     data: Array<RadarDataItem>;
 }
 

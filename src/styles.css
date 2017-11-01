@@ -6,7 +6,14 @@ body
   line-height: 1.42857142857143;
 }
 
-
+.inputColor
+{
+width: 40px;
+height: 40px;
+background-color: transparent;
+border: none;
+margin-left: 10px;
+}
 
 .radarTitle
 {
@@ -24,7 +31,7 @@ body
     color:rgb(51, 51, 51);
     font-size: 28px;
 }
-
+/* 
 .navbar-default .navbar-nav>li>a {
     color: #515151;
     
@@ -47,4 +54,4 @@ body
     text-decoration: none;
     background-color: #205081;
     color: #ffffff;
-}
+} */

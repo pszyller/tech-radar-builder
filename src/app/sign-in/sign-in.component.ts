@@ -24,6 +24,7 @@ export class SignInComponent {
   authByGitHub() { this.authBy(AuthProviders.Github); }
   authByFacebook() { this.authBy(AuthProviders.Facebook); }
   authByTwitter() { this.authBy(AuthProviders.Twitter); }
+  authByPassword() { this.authBy(AuthProviders.Password); }
 
   authBy(provider: AuthProviders) {
     this.firebaseService.auth(provider).then(state => {

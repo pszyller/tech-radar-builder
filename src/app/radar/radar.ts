@@ -62,75 +62,15 @@ export class TechRadar {
     onItemStageChange: any;
     group: any;
     scalar:number = 1;
+    proto:RadarDefinition;
+    cache:{} = new Object();
 
     constructor(radarData, scale, readOnly:boolean) {
-          
+        
         this.readOnly = readOnly;
         var radarDefinition : RadarDefinition;
-var d = {
-                "key" : "",
-                "config": {
-                    "title": "My New Radar",
-                    "updateDate": new Date().toString(),
-                    "contact": "",
-                    "showItemsList" : true,
-                    "slices": [
-                         {
-                            "id" : 1,
-                            "name": "Tools/Technologies",
-                            "perc": 33.33
-                        },
-                         {
-                            "id" : 2,
-                            "name": "Languages",
-                            "perc": 33.33
-                        },
-                         {
-                            "id" : 3,
-                            "name": "Practices",
-                            "perc": 33.33
-                        },
-                    ],
-                    "stages": [
-                        {
-                            "id" : 1,
-                            "name": "On Hold",
-                            "perc": 25
-                        },
-                        {
-                            "id" : 2,
-                            "name": "Assess",
-                            "perc": 25
-                        },
-                        {
-                            "id" : 3,
-                            "name": "Trial",
-                            "perc": 25
-                        },
-                        {
-                             "id" : 4,
-                            "name": "Adopted",
-                            "perc": 25
-                        }
-                    ]
-                },
-                "data": [
-                    {
-                        "sliceId": 1,
-                        "data": []
-                    },
-                    {
-                        "sliceId": 2,
-                        "data": []
-                    },
-                    {
-                        "sliceId": 3,
-                        "data": []
-                    }
-                ]
-            };
-
-        radarDefinition = <RadarDefinition>d;
+      
+        radarDefinition = _.cloneDeep(TechRadar.prototype.proto);
         
         if (radarData == null) {
             radarData = radarDefinition;
@@ -147,18 +87,14 @@ var d = {
           //      transform: 's' + this.scale,
                 viewBox: "0,0," + this.vbSize + "," + this.vbSize,
             });
-            debugger;
+            
             
             var _this = this;
             this.s.mousemove( function(ev,x,y,c,b)
             {
-                console.log(ev.movementX + ' b:' + ev.buttons);
-            
                 if(ev.buttons > 0 && !_this.lockRadarMove)
                 {
-           
                     _this.group.transform('S'+_this.scalar+' 0 0 T' + (_this.group.matrix.e + ev.movementX) + ',' + (_this.group.matrix.f + ev.movementY));
-                  
                 }
             } );
 
@@ -192,40 +128,11 @@ var d = {
                 _this.create(_this.size, radarData);
             }
 
-
-
         this.scale = scale;
         this.size = 2000 * scale;
         this.radarAnimation = true;
         this.t = this.s.text(10, 10, "text");
         this.updateListeners = [];
-        this.colors =
-            [
-                '#ffffff',
-                '#ff0000',
-                '#ffffff',
-                '#ffffff',
-                '#ffffff',
-                '#ffffff',
-                '#ffffff',
-                '#ffffff',
-                '#ffffff',
-                '#ffffff',
-                '#ffffff',
-                '#ffffff',
-                '#ffffff',
-                '#ffffff',
-                '#ffffff',
-            ];
-        this.cols =
-            [
-                '#ff0000',
-                '#00ff00',
-                '#000ff0',
-                '#0ff000',
-                '#0f00ff',
-            ];
-
         this.create(this.size, radarData);
         this.radarAnimation = false;
     }
@@ -242,7 +149,7 @@ var d = {
         var _this = this;
         var saveTransform = 'S'+ this.scalar+' 0 0 T0,0';
 
-        debugger;
+        
         if(this.s.select("#main"))
         {
            saveTransform = this.s.select("#main").attr('transform').string;
@@ -264,7 +171,7 @@ var d = {
                 y: this.radius + 100 * _this.scale
             }
         this.init();
-
+       
         if(this.radarDefinition.config.showItemsList)
         {
           //  this.drawListing();
@@ -323,6 +230,7 @@ var d = {
 
         var stop = function () {
             _this.lockRadarMove = false;
+            
             if(!moved)
             {
                 if(_this.editItem)
@@ -343,16 +251,24 @@ var d = {
         item.size = item.size|| 4;
         item.color = item.color|| '#FF0000';
 
-        var c = this.s.circle(0, 0, item.size);
-        c.attr({
-            fill: item.color,
-            'fill-opacity': 1,
-            stroke: "#FFFFFF",
-            strokeWidth: 0.5
-        });
+        var c = this.s.g(); //this.s.circle(0, 0, item.size);
+               
         this.group.add(c);
+            
+        this.loadExternal(item.shape || 'circle.svg',  function(d){
+          c.add(d);
+            d.attr({
+                fill: item.color,
+                'fill-opacity': 1,
+                stroke: "#FFFFFF",
+                strokeWidth: 0.5,
+            });
+            d.transform('s'+item.size/5);
+            g.add(c);
 
-
+        });
+    
+        
         // if(initBounce)
         // {
         // Snap.animate(600, 100, function (val) {
@@ -362,7 +278,7 @@ var d = {
 
         var threshold = _this.scalar * item.size > 6;
         if(threshold)
-        var ct = this.s.multitext(6 + item.size, 5, item.title, 150, { "font-size": Math.max(12 / _this.scalar, 10) + "px" });
+        var ct = this.s.multitext(6 + item.size, 5, item.title, 150, { "font-size": Math.max(12 / _this.scalar, 10) + "px", "color": this.contrastColor(item.color) });
         
         if (!_this.radarAnimation)
             g.transform('t' + x + ',' + y);
@@ -383,13 +299,13 @@ var d = {
             {
                 if(_this.editItem)
                 {
-                    debugger;
+                    
                    _this.editItem(item);
                 }
             });
              
         }
-this.group.add(g);
+        this.group.add(g);
         g.hover(function () {
             //  _this.itemDescription.attr({x: g.matrix.e, y:g.matrix.f - 250, "display": ""});
           //  _this.itemDescription.show(g.radarItem.title, g.radarItem.desc, 50, 150);
@@ -406,7 +322,7 @@ this.group.add(g);
             //_this.itemDescription.attr({ "display": "none" });
 
             Snap.animate(c.matrix.d, 1, function (val) {
-              debugger;
+          
                 c.transform('s' + val);
             }, 1000, mina.bounce);
 
@@ -421,6 +337,56 @@ this.group.add(g);
 
         }
 
+    }
+  
+    hexToRgb(hex) {
+        var result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+        return result ? {
+            r: parseInt(result[1], 16),
+            g: parseInt(result[2], 16),
+            b: parseInt(result[3], 16)
+        } : null;
+    }
+    componentToHex(c) {
+        var hex = c.toString(16);
+        return hex.length == 1 ? "0" + hex : hex;
+    }
+    
+    rgbToHex(r, g, b) {
+        return "#" + this.componentToHex(r) + this.componentToHex(g) + this.componentToHex(b);
+    }
+    
+
+    contrastColor(color)
+    {
+        var d = 0;
+    
+        // Counting the perceptive luminance - human eye favors green color... 
+        var a = 1 - ( 0.299 * color.R + 0.587 * color.G + 0.114 * color.B)/255;
+    
+        if (a < 0.5)
+           d = 0; // bright colors - black font
+        else
+           d = 255; // dark colors - white font
+    
+        return  this.rgbToHex(d, d, d);
+    }
+
+
+    loadExternal(name:string, doneCallback)
+    {
+        var k = "/assets/svg/"+name;
+        if(this.cache[k])
+        {
+            doneCallback(_.cloneDeep(this.cache[k]));
+        }
+        var _this = this;
+        Snap.load(k, function(f) {
+            var layer0 = f.select("#gr");
+            _this.cache[k] = layer0;
+            doneCallback(layer0);
+            
+        });
     }
 
     draw(percent, radius, color, maxOpacity, width) {
@@ -469,7 +435,7 @@ this.group.add(g);
             
             var rot = 360 * (this.radarDefinition.config.slices[i].perc/100); //(360 / parts);
             
-            var col = this.radarDefinition.config.slices[i].color;
+            var col = this.radarDefinition.config.slices[i].color || '#EEEEEE';
             //col = this.colorLuminance(col, stageIndex/this.radarDefinition.config.stages.length);
             var opacity = (0.5 + (0.5 * stageIndex/this.radarDefinition.config.stages.length))*100;
             var c2 = this.draw(this.radarDefinition.config.slices[i].perc/100, radius, col, opacity, width);
@@ -480,7 +446,7 @@ this.group.add(g);
     }
 
     colorLuminance(hex, lum) {
-debugger;
+
 	// validate hex string
 	hex = String(hex).replace(/[^0-9a-f]/gi, '');
 	if (hex.length < 6) {
@@ -503,111 +469,7 @@ debugger;
         this.t.remove();
         this.t = this.s.text(x || 100, y || 50, text);
     }
-
-    drawListing() {
-        var slicesLength = this.radarDefinition.config.slices.length;
-        var stagesLength = this.radarDefinition.config.stages.length;
-        var _this = this;
-        var bullet = { col: '', x: 50, y: _this.centre.y + _this.radius + 100, ox: 50, oy: _this.centre.y + _this.radius + 100 };
-        var gr = this.s.g();
-        var column = { i: 0, width: (_this.canvasSize) / (slicesLength) };
-
-        _.forEach(_.sortBy(this.radarDefinition.data, function (c: any) {
-            return c.slice;
-        }), function (slice:RadarDataItem) {
-
-            var ind = _.findIndex(_this.radarDefinition.config.slices, function (e) { return e.id == slice.sliceId });
-            var elem = _.find(_this.radarDefinition.config.slices, function(e) { return e.id == slice.sliceId } );
-            bullet.col = _this.cols[ind];
-            bullet.y += 30;
-            //  if(column.i%3 == 0)
-            //  {
-            bullet.x = bullet.ox + column.i * column.width;
-            bullet.y = bullet.oy;
-            // }
-
-            column.i++;
-            if(!elem)
-            return;
-
-            var t =
-            _this.s.text(bullet.x, bullet.y, elem.name).attr({
-                'fill': bullet.col, 'stroke': '#000000', 'stroke-width': 0.0,
-                "font-size": "20px",
-                "font-family": "Arial"
-            });
-            this.group.add(t);
-
-            var currentStage = { stageId: -1 };
-            _.forEach(_.sortBy(slice.data, function (c: RadarDataItemDef) {
-                return _this.radarDefinition.config.stages.length - _.findIndex(_this.radarDefinition.config.stages, function (e: RadarStage) {
-                    return e.id == c.stageId;
-                });
-            }), function (stage) {
-
-             var ind = _.findIndex(_this.radarDefinition.config.stages, function (e) {
-                    return e.id == stage.stageId
-                });
-              
-            var st = _.find(_this.radarDefinition.config.stages, function (e) {
-                    return e.id == stage.stageId
-                });
-            
-            
-            
-
-                if (currentStage.stageId != stage.stageId) {
-                    currentStage.stageId = stage.stageId;
-                    bullet.y += 30;
-                    var n = (st && st.name) ? st.name : "[error neme]";
-                    
-                    var b = _this.s.text(bullet.x + 5, bullet.y + 5, n).attr(
-                        {
-                            'font-family': "Arial",
-                            'fill': '#000000', 'stroke': '#000000', 'stroke-width': 0.0,
-                        });
-                    this.group.add(b);
-                    bullet.y += 30;
-                }
-
-        
-        
-                var circle =
-                _this.s.circle(bullet.x, bullet.y, 4)
-                    .attr({
-                        fill: bullet.col,
-                        'fill-opacity': 0.5,
-                        stroke: "#050505",
-                        "font-family": "Arial",
-                        strokeWidth: 1
-                    });
-                this.group.add(circle);
-                var title = _this.s.text(bullet.x + 20, bullet.y + 5, stage.title).attr(
-                    {
-                        fill: bullet.col,
-                        "font-size": "15px",
-                    });
-                    this.group.add(title);
-                var desc = _this.s.multitext(bullet.x + 20, bullet.y + 5, stage.title + ' ' + (stage.desc ? ' - ' + stage.desc : ''), column.width - 50,
-                    {
-                        "font-size": "15px",
-                    });
-                    this.group.add(desc);
-                // _this.s.text(bullet.x +20, bullet.y + 5, stage.title + (stage.desc ? ' - ' : '') + stage.desc).attr(
-                //     {
-                //            "font-family" : "Arial"
-                //     });
-                bullet.y += desc.node.clientHeight;
-                //       var rect = this.s.rect(this.centre - this.radius, this.centre + this.radius, 100,100)
-                // .attr({strokeWidth:3});
-            });
-            //   bullet.y += 20;
-
-        });
-
-
-    }
-
+    
     init() {
         var slicesLength = this.radarDefinition.config.slices.length;
         var stagesLength = this.radarDefinition.config.stages.length;
@@ -615,17 +477,7 @@ debugger;
 
         var current = null;
         this.map = {};
-
-        // var title = _this.s.paper.text(this.centre.x, 50, _this.radarDefinition.config.title.toUpperCase()).attr(
-        //     {
-        //         'fill': '#000000', 'stroke': '#000000', 'stroke-width': 0.5,
-        //         "font-size": "25px",
-        //         "font-family": "Arial",
-        //         "text-anchor": "middle",
-        //     });
-
-       
-
+ 
         this.drawRing(slicesLength, _this.radius + (15), 30, function (sliceIndex, elem) {
             var l = elem.getTotalLength();
             var t1 = _this.s.paper.text((l / 2), 100, _this.radarDefinition.config.slices[sliceIndex].name).attr(
@@ -676,6 +528,7 @@ debugger;
 
                     //_this.write(key);
                     if (_this.dr && _this.dr.attr('display') == "none") {
+                      
                         var slice =
                             _.find(_this.radarDefinition.data, function (e: RadarDataItem) {
                                 return e.sliceId == _this.radarDefinition.config.slices[sliceIndex].id;
@@ -738,7 +591,7 @@ debugger;
                         if (Math.sqrt(dx * dx + dy * dy) <= _this.radius) {
                             newItem.x *= 1 / _this.scale;
                             newItem.y *= 1 / _this.scale;
-                            debugger;
+                            
                             slice.data.push(newItem);
                         }
                         _this.dr.attr({ display: "" });
@@ -765,7 +618,7 @@ debugger;
                     //     current.attr({ stroke: '#ff0000'});
                 });
                 _this.map[key] = elem;
-            }, this.colors[i], i);
+            }, '#FF000', i);
             var f = this.s.paper.filter(Snap.filter.blur(0.1, 0.1));
             var c = this.s.paper.circle(this.centre.x, this.centre.y, _this.radius - (rSum)).attr({
          
@@ -801,7 +654,7 @@ debugger;
             var sliceId = slElems.sliceId;
             _.forEach(slElems.data, function (obj) {
                 //var ind = _.findIndex(_this.radarDefinition.config.slices, function (e) { return e.id == sliceId })
-                _this.add(obj, obj.x * _this.scale, obj.y * _this.scale, _this.cols[0]);
+                _this.add(obj, obj.x * _this.scale, obj.y * _this.scale, '');
             });
         });
 
@@ -812,6 +665,11 @@ debugger;
 
 }
 
+
+ TechRadar.prototype.proto = <RadarDefinition>
+ {"key":"-KxbVnVJ7kodlI4VbBwV","config":{"title":"My New Radar","updateDate":"","contact":"","showItemsList":false,"slices":[{"id":1,"name":"Tools/Technologies","perc":33.33,"color":"#feffd7"},{"id":2,"name":"Languages","perc":33.33,"color":"#d2ffd2"},{"id":3,"name":"Practices","perc":33.33,"color":"#ffdddd"}],"stages":[{"id":1,"name":"On Hold","perc":20},{"id":2,"name":"Assess","perc":20},{"id":3,"name":"Trial","perc":20},{"id":4,"name":"Adopted","perc":40}]},"data":[{"sliceId":1,"data":[]},{"sliceId":2,"data":[]},{"sliceId":3,"data":[]}]};
+
+ 
 
 
 

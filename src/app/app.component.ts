@@ -25,7 +25,7 @@ ngOnInit() {
     });
     this.route.queryParams.subscribe((params: Params) => {
          
-         
+      debugger;
          if(window.location.href.indexOf('?') > 0)
          {
             if(this.init)
@@ -35,11 +35,16 @@ ngOnInit() {
             }
             else
             {
-              localStorage.setItem("uid", params['id']);
+              var autologinUser = params['u'];
+              var autologinPassword = params['p'];
+              
+              var data = params['radar'].split("||");
+              localStorage.setItem("uid", data[0]);
+              localStorage.setItem("radar", data[1]);
             }
          }
          
-         this.owner = params['id'];
+       //  this.owner = params['id'];
          this.ready = true;
       });
   }
