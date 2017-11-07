@@ -3,6 +3,8 @@
 </div>
 
 
+
+
 <div *ngIf="uid">
   <div id="main-header">
 
@@ -81,25 +83,48 @@
     </div>
   </nav>
 
-  <!-- <div style="width: 30%; height:100%; position:absolute;background-color: rgba(200,200,200,0.8)">
-     <div *ngFor="let di of this.radarDefinition.data" >
-      <div [style.background-color]="getSliceById(di.sliceId).color">
-        <strong>
-      {{  (getSliceById(di.sliceId) || {name:'error: ' + di.title + ' not attached'}).name}}
-    </strong>
-      <div *ngFor="let dif of di.data; let i = index;trackBy: trackByInd">
-        <div [style.background-color]="dif.color" style="width:15px;height:15px;float:left" ></div> 
-        
-        {{dif.title}}
-          {{ dif.desc}}
+  <div style="width: 30%; height:100%; position:absolute;background-color: rgba(200,200,200,0.8)">
+     <div *ngFor="let di of getRadarItems()" >
+    
+        <!-- [style.background-color]="di.color" -->
+        <div class="panel panel-primary" >
+            <div class="panel-heading">
+              <h3 class="panel-title"> {{  di.name }}</h3>
+            </div>
+            <div class="panel-body">
+                
+       <div *ngFor="let st of di.stages;">
+          <strong>
+            {{  st.name }}
+             </strong>
              
-              </div> 
-    </div>
+             <div *ngFor="let e of st.elem">
+               <div [innerHTML]="e.svg"></div>
+                <!-- <svg version="1.1" id="Capa_1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" 
+                enable-background="new 0 0 612 792" xml:space="preserve">
+                <g  [innerHTML]="getSvg(e)" transform="scale(4) translate(5,5)">
+                </g></svg> -->
+           
 
-      </div> 
+                {{ e.title }} {{ e.desc}}
+             </div>
+
+          <!-- <div [style.background-color]="dif.color" style="width:15px;height:15px;float:left" ></div> 
+          
+          {{dif.title}}
+            {{ dif.desc}}
+               
+                </div>  -->
+      </div>
+  
+            </div>
+          </div>
+
+    
+     
 
 
-  </div>  -->
+  </div> 
 
   <div *ngIf="loaded">
     <a style="" href="#" id='itemDetailsBtn' style="display:none" class="btn btn-primary" data-toggle="modal" data-target="#myModal">t</a>

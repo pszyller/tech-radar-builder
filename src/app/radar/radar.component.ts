@@ -143,7 +143,7 @@ export class RadarComponent implements OnInit {
     newItem.color = this.itemWorkingCopy.color;
     newItem.shape = this.itemWorkingCopy.shape;
 
-    this.techRadar.add(newItem, newItem.x, newItem.y, "#ff0000", true);
+    this.techRadar.add(newItem, newItem.x, newItem.y, null, true);
   }
 
   changeRadar(radar) {
@@ -344,5 +344,87 @@ export class RadarComponent implements OnInit {
           return e.id == c.stageId;
       })}));
   }
-}
 
+
+  getRadarItems()
+  {
+    if(!this.radarDefinition || !this.radarDefinition.config.slices)
+    return;
+
+    console.log('updating');
+    var sliceMap = {};
+    var stageMap = {};
+    
+    this.radarDefinition.config.slices.forEach(s => {
+      sliceMap[s.id] = s;
+    });
+    this.radarDefinition.config.stages.forEach(s => {
+      sliceMap[s.id] = s;
+    });
+
+    var slices = [];
+
+
+   this.radarDefinition.config.slices.forEach(element => {
+    
+    var clone = <any>_.cloneDeep(element); 
+    
+    clone.stages = [];
+
+    this.radarDefinition.config.stages.forEach(e => 
+      {
+        var stclone = <any>_.cloneDeep(e); 
+        stclone.elem = [];
+        clone.stages.push(stclone);
+      });
+
+    slices.push(clone);
+
+   });
+    
+   this.radarDefinition.data.forEach(element => {
+    
+     var s = _.find(slices, function (e: any) {
+       return e.id == element.sliceId;
+       });
+
+    element.data.forEach(el => {
+    if(!s.stages)
+    {
+      debugger;
+    }
+      var g =  _.find(s.stages, function (e: any) {
+        return e.id == el.stageId;
+      });
+      var newEl = <any>_.cloneDeep(el);
+     
+      newEl.svg = "<div id='test' style='background-color:red;width:40px,height:30px'></div>";
+      g.elem.push(newEl);
+      // this.techRadar.loadExternal(newEl.shape || 'circle.svg',  function(d){
+        
+    
+      //     // d.attr({
+      //     //     fill: el.color,
+      //     //     'fill-opacity': 1,
+      //     //     stroke: "#FFFFFF",
+      //     //     strokeWidth: 0.5,
+      //     // });
+      //     // d.transform('s'+el.size/5);
+      
+      //     newEl.svg = "<div id='test' style='background-color:red;width:40px,height:30px'></div>";
+      //  console.log('load');
+      //     //d.node.outerHTML
+  
+      // });
+
+    });
+  
+  });
+  debugger;
+    return slices;
+
+  }
+
+
+
+}

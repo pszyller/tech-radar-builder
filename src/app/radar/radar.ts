@@ -60,10 +60,17 @@ export class TechRadar {
     readOnly: boolean;
     lockRadarMove:boolean;
     onItemStageChange: any;
-    group: any;
     scalar:number = 1;
     proto:RadarDefinition;
+    currentElem : any;
     cache:{} = new Object();
+
+    layerGroup:any;
+    layer0:any;
+    layer3:any;
+    layer1:any;
+    layer2:any;
+    
 
     constructor(radarData, scale, readOnly:boolean) {
         
@@ -94,7 +101,7 @@ export class TechRadar {
             {
                 if(ev.buttons > 0 && !_this.lockRadarMove)
                 {
-                    _this.group.transform('S'+_this.scalar+' 0 0 T' + (_this.group.matrix.e + ev.movementX) + ',' + (_this.group.matrix.f + ev.movementY));
+                    _this.layerGroup.transform('S'+_this.scalar+' 0 0 T' + (_this.layerGroup.matrix.e + ev.movementX) + ',' + (_this.layerGroup.matrix.f + ev.movementY));
                 }
             } );
 
@@ -124,7 +131,7 @@ export class TechRadar {
                 console.log('scale: ' + _this.scalar);
 
 
-                _this.group.transform('s'+_this.scalar+' 0 0 T' + (_this.group.matrix.e + ev.deltaY) + ',' + (_this.group.matrix.f + ev.deltaY));
+                _this.layerGroup.transform('s'+_this.scalar+' 0 0 T' + (_this.layerGroup.matrix.e + ev.deltaY) + ',' + (_this.layerGroup.matrix.f + ev.deltaY));
                 _this.create(_this.size, radarData);
             }
 
@@ -150,17 +157,30 @@ export class TechRadar {
         var saveTransform = 'S'+ this.scalar+' 0 0 T0,0';
 
         
-        if(this.s.select("#main"))
+        if(this.s.select("#group"))
         {
-           saveTransform = this.s.select("#main").attr('transform').string;
+           saveTransform = this.s.select("#group").attr('transform').string;
         }
         
         this.s.clear();
-        this.group = this.s.paper.g()
-        this.group.attr('transform', saveTransform);
-        //this.group.attr('transform', 'S'+ this.scalar+' 0 0 T0,0');
+        this.layerGroup = this.s.paper.g().attr("id", "group");
+        this.layerGroup.attr('transform', saveTransform);
+
+        this.layer0 = this.s.paper.g().attr({id:"layer0"});
+        
+        this.layer1 = this.s.paper.g().attr({id:"layer1"});
+        this.layer2 = this.s.paper.g().attr({id:"layer2", display:"none"});
+        this.layer3 = this.s.paper.g().attr({id:"layer3", "fill":"transparent","cursor":"move"});
+        
+        this.layerGroup.add(this.layer1);
+        this.layerGroup.add(this.layer3);
+        this.layerGroup.add(this.layer0);
+        this.layerGroup.add(this.layer2);
+        
+        this.layer3.add(this.s.paper.rect(0,0,2000,2000));
+
         this.scale = 1;
-        this.group.attr("id", "main");
+      //  this.layer0.attr("id", "main");
         this.map = {};
         this.radarDefinition = radarDef;
         this.canvasSize = size;
@@ -202,7 +222,7 @@ export class TechRadar {
       _this.create(_this.size, _this.radarDefinition);
     }
 
-    add(item : RadarDataItemDef, x, y, color, initBounce : boolean = false) {
+    add(item : RadarDataItemDef, x, y, slice : RadarSlice, initBounce : boolean = false) {
         var _this = this;
         var dragObj = { matrix: { e: {}, f: {} } };
         var g = this.s.g();
@@ -213,7 +233,7 @@ export class TechRadar {
             dy *= 2000 / window.innerWidth /  _this.scalar;
             //_this.itemDescription.attr({ "display": "none" });
            
-           if(dx > 0 || dy > 0)
+           if(dx != 0 || dy != 0)
             moved = true;
             this.attr({
                 transform: this.data('origTransform') + (this.data('origTransform') ? "T" : "t") + [dx, dy]
@@ -222,6 +242,7 @@ export class TechRadar {
 
         var start = function (e,f) {
             _this.lockRadarMove = true;
+            _this.layer2.attr({display:"block"});
             dragObj = this;
             moved = false;
               
@@ -230,7 +251,7 @@ export class TechRadar {
 
         var stop = function () {
             _this.lockRadarMove = false;
-            
+            _this.layer2.attr({display:"none"});
             if(!moved)
             {
                 if(_this.editItem)
@@ -241,19 +262,101 @@ export class TechRadar {
                 }
             };
             
-
+            
             var x = dragObj.matrix.e;
             var y = dragObj.matrix.f;
+               
             _this.dr = dragObj;
 
-            _this.dr.attr({ display: "none" });
+            if (_this.dr) {
+                
+                  var slice =
+                      _.find(_this.radarDefinition.data, function (e: RadarDataItem) {
+                          return e.sliceId == _this.radarDefinition.config.slices[_this.currentElem.slicei].id;
+                      });
+
+                  if (!slice) {
+                      slice = {
+                          sliceId: _this.radarDefinition.config.slices[_this.currentElem.slicei].id,
+                          data: []
+                      };
+                      _this.radarDefinition.data.push(slice);
+
+                  }
+
+                  var newItem = <RadarDataItemDef>_this.dr.radarItem;
+
+                  if(newItem.stageId != _this.currentElem.stagei)
+                  {
+                      var oldS =
+                      _.find(_this.radarDefinition.config.stages, function (e: RadarStage) {
+                          return e.id == newItem.stageId;
+                      });
+                      var newS =
+                      _.find(_this.radarDefinition.config.stages, function (e: RadarStage) {
+                          return e.id == _this.currentElem.stagei;
+                      });
+
+                      var hi = new HistoryItem();
+                      hi.date = new Date();
+                      if(oldS)
+                      hi.log = "Move from " + oldS.name + " to " + newS.name;
+                      else
+                      hi.log = "Added as " + newS.name;
+
+                      hi.x = newItem.x;
+                      hi.y = newItem.y;
+                    
+                      if(!newItem.history)
+                      {
+                          newItem.history = new Array<HistoryItem>();
+                      }
+                    newItem.history.push(hi);
+                  }
+
+                  newItem.stageId= _this.currentElem.stagei;
+                  newItem.x = _this.dr.matrix.e;
+                  newItem.y = _this.dr.matrix.f;
+
+                  _.forEach(_this.radarDefinition.data, function (sliceElem) {
+                      var existing =
+                          _.findIndex(sliceElem.data, function (b: RadarDataItemDef) { return b.title == newItem.title });
+
+                      if (existing >= 0) {
+                          sliceElem.data.splice(existing, 1);
+                      }
+                  });
+
+                  var dx = _this.centre.x - newItem.x;
+                  var dy = _this.centre.y - newItem.y;
+                  if (Math.sqrt(dx * dx + dy * dy) <= _this.radius) {
+                      newItem.x *= 1 / _this.scale;
+                      newItem.y *= 1 / _this.scale;
+                      
+                      slice.data.push(newItem);
+                  }
+                  _this.dr.attr({ display: "" });
+                  _this.updateListeners.forEach(function (fn) {
+                      fn(_this.radarDefinition);
+                  });
+
+                  Snap.animate(255, 240, function (val) { _this.currentElem.e.attr({ "stroke": 'rgb(' + val + ',' + val + ',' + val + ')' }) }, 300, mina.linear,
+                      function () {
+                          Snap.animate(240, 255, function (val) { _this.currentElem.e.attr({ "stroke": 'rgb(' + val + ',' + val + ',' + val + ')' }) }, 300, mina.linear,
+                              function () {
+                                  _this.create(_this.size, _this.radarDefinition);
+                              });
+                      }
+                  );
+              }
         }
+
         item.size = item.size|| 4;
         item.color = item.color|| '#FF0000';
 
         var c = this.s.g(); //this.s.circle(0, 0, item.size);
                
-        this.group.add(c);
+        g.add(c);
             
         this.loadExternal(item.shape || 'circle.svg',  function(d){
           c.add(d);
@@ -267,18 +370,10 @@ export class TechRadar {
             g.add(c);
 
         });
-    
-        
-        // if(initBounce)
-        // {
-        // Snap.animate(600, 100, function (val) {
-        //         c.transform('s' + (val/100));
-        //     }, 500, mina.elastic);
-        // }
 
         var threshold = _this.scalar * item.size > 6;
         if(threshold)
-        var ct = this.s.multitext(6 + item.size, 5, item.title, 150, { "font-size": Math.max(12 / _this.scalar, 10) + "px", "color": this.contrastColor(item.color) });
+        var ct = this.s.multitext(6 + item.size, 5, item.title, 150, { "font-size": Math.max(12 / _this.scalar, 10) + "px", "fill": this.contrastColor(slice?slice.color:'#FFFFFF') });
         
         if (!_this.radarAnimation)
             g.transform('t' + x + ',' + y);
@@ -305,11 +400,11 @@ export class TechRadar {
             });
              
         }
-        this.group.add(g);
+        this.layer0.add(g);
+        
         g.hover(function () {
-            //  _this.itemDescription.attr({x: g.matrix.e, y:g.matrix.f - 250, "display": ""});
-          //  _this.itemDescription.show(g.radarItem.title, g.radarItem.desc, 50, 150);
-            
+           
+            //setTimeout(function() {g.locked =false;}, 1000);          
             Snap.animate(1, 2, function (val) {
                
                 c.transform('s' + val);
@@ -319,9 +414,10 @@ export class TechRadar {
             });
 
         }, function () {
-            //_this.itemDescription.attr({ "display": "none" });
+           if(_this.lockRadarMove)
+           return;
 
-            Snap.animate(c.matrix.d, 1, function (val) {
+            Snap.animate(2, 1, function (val) {
           
                 c.transform('s' + val);
             }, 1000, mina.bounce);
@@ -359,10 +455,11 @@ export class TechRadar {
 
     contrastColor(color)
     {
+        color = this.hexToRgb(color); 
         var d = 0;
     
         // Counting the perceptive luminance - human eye favors green color... 
-        var a = 1 - ( 0.299 * color.R + 0.587 * color.G + 0.114 * color.B)/255;
+        var a = 1 - ( 0.299 * color.r + 0.587 * color.g + 0.114 * color.b)/255;
     
         if (a < 0.5)
            d = 0; // bright colors - black font
@@ -379,6 +476,7 @@ export class TechRadar {
         if(this.cache[k])
         {
             doneCallback(_.cloneDeep(this.cache[k]));
+            return;
         }
         var _this = this;
         Snap.load(k, function(f) {
@@ -389,7 +487,7 @@ export class TechRadar {
         });
     }
 
-    draw(percent, radius, color, maxOpacity, width) {
+    draw(percent, radius, color, maxOpacity, width, animation) {
         var arc = this.s.path("");
         var startY = this.centre.y - radius;
         var endpoint = percent * 360;
@@ -406,11 +504,11 @@ export class TechRadar {
         arc.attr({
             stroke: color,
             fill: 'none',
-            'stroke-opacity': this.radarAnimation ? 0 : maxOpacity/100,
-            strokeWidth: width
+            'stroke-opacity': animation? 0 : maxOpacity/100,
+            strokeWidth: width,
         });
 
-        if (this.radarAnimation) {
+        if (animation) {
             Snap.animate(0, maxOpacity, function (val) {
                 arc.attr({
                     'stroke-opacity': (val / 100)
@@ -424,7 +522,7 @@ export class TechRadar {
 
             }, 100 + (radius * 5), mina.backout);
         }
-        this.group.add(arc);
+        
         return arc;
     }
 
@@ -435,14 +533,23 @@ export class TechRadar {
             
             var rot = 360 * (this.radarDefinition.config.slices[i].perc/100); //(360 / parts);
             
-            var col = this.radarDefinition.config.slices[i].color || '#EEEEEE';
+            var col = color || this.radarDefinition.config.slices[i].color || '#EEEEEE';
             //col = this.colorLuminance(col, stageIndex/this.radarDefinition.config.stages.length);
             var opacity = (0.5 + (0.5 * stageIndex/this.radarDefinition.config.stages.length))*100;
-            var c2 = this.draw(this.radarDefinition.config.slices[i].perc/100, radius, col, opacity, width);
+            var c2 = this.draw(this.radarDefinition.config.slices[i].perc/100, radius, col, opacity, width, this.radarAnimation);
+            this.layer1.add(c2);
             c2.transform('r' + rotSum + ',' + this.centre.x + ',' + this.centre.y);
+        
+            var c3 = this.draw(this.radarDefinition.config.slices[i].perc/100, radius, 'transparent', opacity, width, this.radarAnimation);
+          
+            this.layer2.add(c3);
+            c3.transform('r' + rotSum + ',' + this.centre.x + ',' + this.centre.y);
+            
             rotSum +=rot;
-            oncreated(i, c2);
+            oncreated(i, c2, c3);
         }
+
+      
     }
 
     colorLuminance(hex, lum) {
@@ -478,7 +585,7 @@ export class TechRadar {
         var current = null;
         this.map = {};
  
-        this.drawRing(slicesLength, _this.radius + (15), 30, function (sliceIndex, elem) {
+        this.drawRing(slicesLength, _this.radius + (35), 30, function (sliceIndex, elem) {
             var l = elem.getTotalLength();
             var t1 = _this.s.paper.text((l / 2), 100, _this.radarDefinition.config.slices[sliceIndex].name).attr(
                 {
@@ -489,8 +596,8 @@ export class TechRadar {
                     
                     "font-family": "Arial"
                 });
-            _this.group.add(t1);
-        }, "#DDDDDD", 0);
+            _this.layer1.add(t1);
+        }, "#FFFFFF", 0);
     
         var rSum = 0;
         for (var i = 0; i < stagesLength; i++) {
@@ -498,7 +605,7 @@ export class TechRadar {
             var ringWidth = _this.radius * (_this.radarDefinition.config.stages[i].perc / 100);
             var shift = ringWidth / 2;
         
-            this.drawRing(slicesLength, _this.radius - (rSum) - shift, ringWidth, function (sliceIndex, elem) {
+            this.drawRing(slicesLength, _this.radius - (rSum) - shift, ringWidth, function (sliceIndex, elem, elemMirror) {
                 //oncreated
 
                 var slice = _this.radarDefinition.config.slices[sliceIndex];
@@ -519,106 +626,35 @@ export class TechRadar {
                         "text-anchor": "middle",
                         "font-family": "Arial"
                     });
-                    _this.group.add(t1);
+                    _this.layer1.add(t1);
                 //  t1.transform('r' + (360/slicesLength*i) + ',' + _this.centre + ',' + _this.centre);
 
-                elem.hover(function () {
+                elemMirror.hover(function () {
+                    _this.currentElem = {
+                        e:elem,
+                        slicei: sliceIndex,
+                        stagei: stagei
+                    } ;
+
+                  
+                //     Snap.animate(255, 240, function (val) { elemMirror.e.attr({ "stroke": 'rgb(' + val + ',' + val + ',' + val + ')' }) }, 300, mina.linear,
+                //     function () {
+                //         Snap.animate(240, 255, function (val) { .e.attr({ "stroke": 'rgb(' + val + ',' + val + ',' + val + ')' }) }, 300, mina.linear,
+                //             function () {
+                //                 _this.create(_this.size, _this.radarDefinition);
+                //             });
+                //     }
+                // );
+
+                      
+                    console.log(_this.currentElem.slicei + ' ' + _this.currentElem.stagei);
                     current = _this.map[key];
                     current.attr({ 'origStroke': current.attr('stroke') });
-
-                    //_this.write(key);
-                    if (_this.dr && _this.dr.attr('display') == "none") {
-                      
-                        var slice =
-                            _.find(_this.radarDefinition.data, function (e: RadarDataItem) {
-                                return e.sliceId == _this.radarDefinition.config.slices[sliceIndex].id;
-                            });
-
-                        if (!slice) {
-                            slice = {
-                                sliceId: _this.radarDefinition.config.slices[sliceIndex].id,
-                                data: []
-                            };
-                            _this.radarDefinition.data.push(slice);
-
-                        }
-
-                        var newItem = <RadarDataItemDef>_this.dr.radarItem;
-
-                        if(newItem.stageId != stagei)
-                        {
-                            var oldS =
-                            _.find(_this.radarDefinition.config.stages, function (e: RadarStage) {
-                                return e.id == newItem.stageId;
-                            });
-                            var newS =
-                            _.find(_this.radarDefinition.config.stages, function (e: RadarStage) {
-                                return e.id == stagei;
-                            });
-
-                            var hi = new HistoryItem();
-                            hi.date = new Date();
-                            if(oldS)
-                            hi.log = "Move from " + oldS.name + " to " + newS.name;
-                            else
-                            hi.log = "Added as " + newS.name;
-
-                            hi.x = newItem.x;
-                            hi.y = newItem.y;
-                          
-                            if(!newItem.history)
-                            {
-                                newItem.history = new Array<HistoryItem>();
-                            }
-                          newItem.history.push(hi);
-                        }
-
-                        newItem.stageId= stagei;
-                        newItem.x = _this.dr.matrix.e;
-                        newItem.y = _this.dr.matrix.f;
-
-                        _.forEach(_this.radarDefinition.data, function (sliceElem) {
-                            var existing =
-                                _.findIndex(sliceElem.data, function (b: RadarDataItemDef) { return b.title == newItem.title });
-
-                            if (existing >= 0) {
-                                sliceElem.data.splice(existing, 1);
-                            }
-                        });
-
-                        var dx = _this.centre.x - newItem.x;
-                        var dy = _this.centre.y - newItem.y;
-                        if (Math.sqrt(dx * dx + dy * dy) <= _this.radius) {
-                            newItem.x *= 1 / _this.scale;
-                            newItem.y *= 1 / _this.scale;
-                            
-                            slice.data.push(newItem);
-                        }
-                        _this.dr.attr({ display: "" });
-                        _this.updateListeners.forEach(function (fn) {
-                            fn(_this.radarDefinition);
-                        });
-
-                        Snap.animate(255, 240, function (val) { elem.attr({ "stroke": 'rgb(' + val + ',' + val + ',' + val + ')' }) }, 300, mina.linear,
-                            function () {
-                                Snap.animate(240, 255, function (val) { elem.attr({ "stroke": 'rgb(' + val + ',' + val + ',' + val + ')' }) }, 300, mina.linear,
-                                    function () {
-                                        _this.create(_this.size, _this.radarDefinition);
-                                    });
-                            }
-                        );
-
-                    }
-
                 }, function () {
                     current = _this.map[key];
-
-
-
-                    //     current.attr({ stroke: '#ff0000'});
                 });
                 _this.map[key] = elem;
-            }, '#FF000', i);
+            }, null, i);
             var f = this.s.paper.filter(Snap.filter.blur(0.1, 0.1));
             var c = this.s.paper.circle(this.centre.x, this.centre.y, _this.radius - (rSum)).attr({
          
@@ -628,7 +664,7 @@ export class TechRadar {
                    //  strokeLinecap: "round",
                         filter: f,
             });
-            this.group.add(c);
+            this.layer0.add(c);
             rSum += ringWidth;
         }
 
@@ -644,17 +680,18 @@ export class TechRadar {
                      filter: f
                 });
             line.transform('r' + rotSum + ',' + this.centre.x + ',' + this.centre.y);
-            this.group.add(line);
+            this.layer1.add(line);
             rotSum +=rot;
         }
 
         var obj = _this.radarDefinition.data;
 
-        _.forEach(obj, function (slElems) {
+        _.forEach(obj, function (slElems:RadarDataItem) {
+        
             var sliceId = slElems.sliceId;
             _.forEach(slElems.data, function (obj) {
-                //var ind = _.findIndex(_this.radarDefinition.config.slices, function (e) { return e.id == sliceId })
-                _this.add(obj, obj.x * _this.scale, obj.y * _this.scale, '');
+                var ind = _.find(_this.radarDefinition.config.slices, function (e) { return e.id == sliceId })
+                _this.add(obj, obj.x * _this.scale, obj.y * _this.scale, ind);
             });
         });
 

@@ -29,8 +29,6 @@ export class RadarConfig
     showItemsList: boolean;
     slices: Array<RadarSlice>;
     stages: Array<RadarStage>;
-
-    
 }
 
 export class HistoryItem
