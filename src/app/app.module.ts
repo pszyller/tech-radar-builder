@@ -9,6 +9,7 @@ import { FirebaseService } from './firebase/firebase.service';
 import { AngularFireModule  } from 'angularfire2';
 import { RadarComponent } from './radar/radar.component';
 import { TechRadar } from './radar/radar';
+import { EscapeHtmlPipe } from './pipes/keep-html.pipe';
 
 const appRoutes: Routes = [
   { path: 'signin', component: SignInComponent },
@@ -27,7 +28,8 @@ export const firebaseConfig = {
   declarations: [
     AppComponent,
     SignInComponent,
-    RadarComponent
+    RadarComponent,
+    EscapeHtmlPipe
   ],
   imports: [
     RouterModule.forRoot(appRoutes),

@@ -1,4 +1,4 @@
-import { Component, OnInit, NgZone } from '@angular/core';
+import { Component, OnInit, NgZone, AfterViewInit } from '@angular/core';
 import * as _ from "lodash";
 import { TechRadar } from './radar';
 import { RadarDefinition, RadarDataItemDef, RadarStage, RadarSlice, ScalableItem, ViewSettings, RadarDataItem } from './radar-definition';
@@ -12,7 +12,7 @@ import { FirebaseService } from '../firebase/firebase.service';
   providers: [FirebaseService]
 })
 
-export class RadarComponent implements OnInit {
+export class RadarComponent implements OnInit, AfterViewInit  {
 
   techRadar: TechRadar;
   radarDefinition: RadarDefinition = new RadarDefinition();
@@ -30,10 +30,13 @@ export class RadarComponent implements OnInit {
   infoModalMsg: string;
   userDisplayName: string;
   readOnlyRadar: string;
-  showConfigureModal:boolean;
+  showConfigureModal: boolean;
+  showLegend:boolean;
+  screenfull:any;
 
   constructor(private fService: FirebaseService, private zone: NgZone) {
 
+    this.screenfull = window["screenfull"];
     this.viewSettings.readOnly = !fService.isAuth;
     this.uid = localStorage.getItem("uid");
     this.readOnlyRadar = localStorage.getItem("radar");
@@ -61,52 +64,47 @@ export class RadarComponent implements OnInit {
           return obj;
         });
 
-      if(this.readOnlyRadar)
-      {
-        var index = this.radars.findIndex((x)=>{return x.key == this.readOnlyRadar; });
-        this.createRadar(this.radars[index]); 
-        this.radarDefinition = this.techRadar.radarDefinition; 
+      if (this.readOnlyRadar) {
+        var index = this.radars.findIndex((x) => { return x.key == this.readOnlyRadar; });
+        this.createRadar(this.radars[index]);
+        this.radarDefinition = this.techRadar.radarDefinition;
       }
       else
-      if(this.radars.length > 0)
-      {
-        this.createRadar(this.radars[0]);
-        this.radarDefinition = this.techRadar.radarDefinition;
-     //  this.configureClick(false);
-      }
-   
-     
+        if (this.radars.length > 0) {
+          this.createRadar(this.radars[0]);
+          this.radarDefinition = this.techRadar.radarDefinition;
+          //  this.configureClick(false);
+        }
+
+
 
       this.loaded = true;
     });
   }
 
-  getIcons()
-  {
+  getIcons() {
     return ["circle.svg", "star.svg", "rsquare.svg", "triangle.svg"];
   }
 
-  selectShape(shapeName:string)
-  {
+  selectShape(shapeName: string) {
     this.itemWorkingCopy.shape = shapeName;
 
   }
 
   editItem(item: RadarDataItemDef) {
-    
+
     this.newItemMode = 'edit';
     this.editingItem = item;
 
     this.itemWorkingCopy = _.cloneDeep(item);
-    if(!this.itemWorkingCopy.shape) this.itemWorkingCopy.shape = 'circle.svg';
+    if (!this.itemWorkingCopy.shape) this.itemWorkingCopy.shape = 'circle.svg';
     this.zone.run(() => {
       document.getElementById('itemDetailsBtn').click();
     });
 
   }
 
-  closeReadOnlyRadar()
-  {
+  closeReadOnlyRadar() {
     localStorage.removeItem("uid");
     localStorage.removeItem("radar");
     this.readOnlyRadar = null;
@@ -114,7 +112,7 @@ export class RadarComponent implements OnInit {
   }
 
   shareClick() {
-    this.infoModalMsg = window.location.href.replace('#','') + '?radar=' + this.uid + '||' + this.radarDefinition.key;
+    this.infoModalMsg = window.location.href.replace('#', '') + '?radar=' + this.uid + '||' + this.radarDefinition.key;
   }
 
   addNewItem() {
@@ -153,16 +151,19 @@ export class RadarComponent implements OnInit {
   }
 
   createRadar(radar: RadarDefinition, s: number = 1) {
+    var self = this;
+    this.zone.runOutsideAngular(function () {
+      self.techRadar = new TechRadar(radar, s, self.viewSettings.readOnly);
+    });
 
-    this.techRadar = new TechRadar(radar, s, this.viewSettings.readOnly);
 
 
     this.techRadar.addUpdateListener(s => {
-      //this.json = JSON.stringify(s, null, 2);
+      this.legendCache = null;
       this.firebaseService.updateRadar(this.uid, s);
     });
     this.techRadar.editItem = (itm) => {
-      debugger;
+      
       this.editItem(itm);
     }
   }
@@ -190,7 +191,7 @@ export class RadarComponent implements OnInit {
 
     this.firebaseService.updateRadar(this.uid, this.radarDefinition);
     this.createRadar(this.radarDefinition);
-    this.showConfigureModal =false;
+    this.showConfigureModal = false;
   }
 
   addItemClick() {
@@ -201,13 +202,13 @@ export class RadarComponent implements OnInit {
   configureClick(isNew: boolean) {
 
     if (!isNew) {
-    this.workingCopyRadarDefinition = JSON.parse(JSON.stringify(this.radarDefinition));
-    this.resetPerc(this.workingCopyRadarDefinition.config.stages, true);
-    this.resetPerc(this.workingCopyRadarDefinition.config.slices, true);
+      this.workingCopyRadarDefinition = JSON.parse(JSON.stringify(this.radarDefinition));
+      this.resetPerc(this.workingCopyRadarDefinition.config.stages, true);
+      this.resetPerc(this.workingCopyRadarDefinition.config.slices, true);
     }
- 
+
     if (isNew) {
-   
+
       this.workingCopyRadarDefinition = TechRadar.prototype.proto;
       this.workingCopyRadarDefinition.key = null;
       // this.workingCopyRadarDefinition.config.title = '';
@@ -215,7 +216,7 @@ export class RadarComponent implements OnInit {
     }
     this.showConfigureModal = true;
     eval("$('#configureModal').modal('show')");
-   
+
   }
 
   resetPerc(arr: Array<ScalableItem>, onlyIfMoreThan100: boolean) {
@@ -240,7 +241,7 @@ export class RadarComponent implements OnInit {
   addStage() {
     let newStage = new RadarStage();
     newStage.name = "new stage " + (this.workingCopyRadarDefinition.config.stages.length + 1);
-    newStage.id = _.max(_.map(this.workingCopyRadarDefinition.config.stages, function(e) { return e.id || 0; })) + 1;
+    newStage.id = _.max(_.map(this.workingCopyRadarDefinition.config.stages, function (e) { return e.id || 0; })) + 1;
 
     this.resetPerc(this.workingCopyRadarDefinition.config.stages, true);
   }
@@ -248,19 +249,23 @@ export class RadarComponent implements OnInit {
   removeHistoryItem(index: number) {
     this.itemWorkingCopy.history.splice(index, 1);
   }
-  removeSlice(slice: string) {
+  removeSlice(slice: RadarSlice) {
 
-    this.workingCopyRadarDefinition.config.slices =
-      _.remove(this.workingCopyRadarDefinition.config.slices, (x: string) => { return x !== slice; });
+
+    _.remove(this.workingCopyRadarDefinition.config.slices, (x: RadarSlice) => { return x.id == slice.id; });
+
+    _.remove(this.workingCopyRadarDefinition.data, (x: RadarDataItem) => { return x.sliceId == slice.id; });
+
+
 
     this.resetPerc(this.workingCopyRadarDefinition.config.slices, false);
 
   }
 
   addSlice() {
-    var newId = _.max(_.map(this.workingCopyRadarDefinition.config.slices, function(e) { return e.id || 0; })) + 1;
-    
-    this.workingCopyRadarDefinition.config.slices.push(new RadarSlice({ id:newId, name: "new slice " + (this.workingCopyRadarDefinition.config.slices.length + 1) }));
+    var newId = _.max(_.map(this.workingCopyRadarDefinition.config.slices, function (e) { return e.id || 0; })) + 1;
+
+    this.workingCopyRadarDefinition.config.slices.push(new RadarSlice({ id: newId, name: "new slice " + (this.workingCopyRadarDefinition.config.slices.length + 1) }));
     this.resetPerc(this.workingCopyRadarDefinition.config.slices, true);
   }
 
@@ -291,9 +296,16 @@ export class RadarComponent implements OnInit {
 
     this.firebaseService.deleteRadar(this.uid, this.radarDefinition);
     var svg = document.getElementById('radar');
-    if(svg != null)
-    svg.remove();
+    if (svg != null)
+      svg.remove();
     this.ngOnInit();
+  }
+
+  fullScreenClick()
+  {
+  
+    if (this.screenfull.enabled) 
+    { this.screenfull.toggle(); };
   }
 
   percChanged(e, ind, arr: Array<ScalableItem>) {
@@ -320,41 +332,43 @@ export class RadarComponent implements OnInit {
     console.debug('sum:' + sum);
   }
 
-  getSliceById(id:number)
-  {
-    
-   return _.find(this.radarDefinition.config.slices, function (e : RadarSlice) { return e.id == id});
+  getSliceById(id: number) {
+
+    return _.find(this.radarDefinition.config.slices, function (e: RadarSlice) { return e.id == id });
   }
 
-  getStageById(id:number)
-  {
-   return _.find(this.radarDefinition.config.stages, function (e : RadarStage) { return e.id == id});
+  getStageById(id: number) {
+    return _.find(this.radarDefinition.config.stages, function (e: RadarStage) { return e.id == id });
   }
- 
-  getSortedItems()
-  {
+
+  getSortedItems() {
     return _.forEach(_.sortBy(this.radarDefinition.data, function (c: any) {
-      return c.slice;}));
+      return c.slice;
+    }));
   }
 
-  getSortedItems2(data:RadarDataItemDef[])
-  {
+  getSortedItems2(data: RadarDataItemDef[]) {
     _.forEach(_.sortBy(data, function (c: RadarDataItemDef) {
       return this.radarDefinition.config.stages.length - _.findIndex(this.radarDefinition.config.stages, function (e: RadarStage) {
-          return e.id == c.stageId;
-      })}));
+        return e.id == c.stageId;
+      })
+    }));
   }
 
+  getRadarItems1(){return [];}
+  
+  legendCache: any;
+  getRadarItems() {
+    if (!this.radarDefinition || !this.radarDefinition.config.slices)
+      return;
 
-  getRadarItems()
-  {
-    if(!this.radarDefinition || !this.radarDefinition.config.slices)
-    return;
+    if(this.legendCache)
+    return this.legendCache;
 
     console.log('updating');
     var sliceMap = {};
     var stageMap = {};
-    
+
     this.radarDefinition.config.slices.forEach(s => {
       sliceMap[s.id] = s;
     });
@@ -365,63 +379,68 @@ export class RadarComponent implements OnInit {
     var slices = [];
 
 
-   this.radarDefinition.config.slices.forEach(element => {
-    
-    var clone = <any>_.cloneDeep(element); 
-    
-    clone.stages = [];
+    this.radarDefinition.config.slices.forEach(element => {
 
-    this.radarDefinition.config.stages.forEach(e => 
-      {
-        var stclone = <any>_.cloneDeep(e); 
+      var clone = <any>_.cloneDeep(element);
+
+      clone.stages = [];
+
+      this.radarDefinition.config.stages.forEach(e => {
+        var stclone = <any>_.cloneDeep(e);
         stclone.elem = [];
         clone.stages.push(stclone);
       });
 
-    slices.push(clone);
-
-   });
-    
-   this.radarDefinition.data.forEach(element => {
-    
-     var s = _.find(slices, function (e: any) {
-       return e.id == element.sliceId;
-       });
-
-    element.data.forEach(el => {
-    if(!s.stages)
-    {
-      debugger;
-    }
-      var g =  _.find(s.stages, function (e: any) {
-        return e.id == el.stageId;
-      });
-      var newEl = <any>_.cloneDeep(el);
-     
-      newEl.svg = "<div id='test' style='background-color:red;width:40px,height:30px'></div>";
-      g.elem.push(newEl);
-      // this.techRadar.loadExternal(newEl.shape || 'circle.svg',  function(d){
-        
-    
-      //     // d.attr({
-      //     //     fill: el.color,
-      //     //     'fill-opacity': 1,
-      //     //     stroke: "#FFFFFF",
-      //     //     strokeWidth: 0.5,
-      //     // });
-      //     // d.transform('s'+el.size/5);
-      
-      //     newEl.svg = "<div id='test' style='background-color:red;width:40px,height:30px'></div>";
-      //  console.log('load');
-      //     //d.node.outerHTML
-  
-      // });
+      slices.push(clone);
 
     });
+
+    this.radarDefinition.data.forEach(element => {
+
+      var s = _.find(slices, function (e: any) {
+        return e.id == element.sliceId;
+      });
+      //  if(!s)return;
+
+      element.data.forEach(el => {
+        if (!s.stages) {
+          
+        }
+        var g = _.find(s.stages, function (e: any) {
+          return e.id == el.stageId;
+        });
+        var newEl = <any>_.cloneDeep(el);
+        g.elem.push(newEl);
+        var self = this;
+        this.zone.runOutsideAngular(function()
+        {
+          var d = self.techRadar.loadSvgFromCache(newEl.shape || 'circle.svg').clone();
+      
+          if (d) {
+            d.attr({
+              fill: el.color,
+              'fill-opacity': 1,
+              stroke: "#FFFFFF",
+              strokeWidth: 0.5,
+            });
+            d.transform('s0.9');
   
-  });
-  debugger;
+            newEl.svg =  d.node.outerHTML;
+          }
+          d.remove();
+        });
+
+      });
+
+    });
+
+    this.legendCache = slices;
     return slices;
+
+  }
+
+  ngAfterViewInit()
+  {
 
   }
 

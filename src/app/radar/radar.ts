@@ -64,7 +64,7 @@ export class TechRadar {
     proto:RadarDefinition;
     currentElem : any;
     cache:{} = new Object();
-
+    mapMoved:boolean;
     layerGroup:any;
     layer0:any;
     layer3:any;
@@ -101,8 +101,11 @@ export class TechRadar {
             {
                 if(ev.buttons > 0 && !_this.lockRadarMove)
                 {
+                    _this.mapMoved = true;
                     _this.layerGroup.transform('S'+_this.scalar+' 0 0 T' + (_this.layerGroup.matrix.e + ev.movementX) + ',' + (_this.layerGroup.matrix.f + ev.movementY));
                 }
+                else
+                _this.mapMoved = false;
             } );
 
             if( (/Firefox/i.test(navigator.userAgent)) ) {
@@ -256,7 +259,7 @@ export class TechRadar {
             {
                 if(_this.editItem)
                 {
-                
+                debugger;
                    _this.editItem(item);
                    return;
                 }
@@ -358,6 +361,7 @@ export class TechRadar {
                
         g.add(c);
             
+        
         this.loadExternal(item.shape || 'circle.svg',  function(d){
           c.add(d);
             d.attr({
@@ -392,9 +396,9 @@ export class TechRadar {
         {
             g.click(function()
             {
-                if(_this.editItem)
+                if(!_this.mapMoved && _this.editItem)
                 {
-                    
+                    ;
                    _this.editItem(item);
                 }
             });
@@ -402,7 +406,7 @@ export class TechRadar {
         }
         this.layer0.add(g);
         
-        g.hover(function () {
+        c.hover(function () {
            
             //setTimeout(function() {g.locked =false;}, 1000);          
             Snap.animate(1, 2, function (val) {
@@ -469,13 +473,21 @@ export class TechRadar {
         return  this.rgbToHex(d, d, d);
     }
 
-
+    loadSvgFromCache(name:string)
+    {
+        var k = "/assets/svg/"+name;
+        if(this.cache[k])
+        {
+            return _.cloneDeep(this.cache[k]);
+        }
+        return null;
+    }
     loadExternal(name:string, doneCallback)
     {
         var k = "/assets/svg/"+name;
         if(this.cache[k])
         {
-            doneCallback(_.cloneDeep(this.cache[k]));
+            doneCallback(this.cache[k].clone());
             return;
         }
         var _this = this;
@@ -491,7 +503,8 @@ export class TechRadar {
         var arc = this.s.path("");
         var startY = this.centre.y - radius;
         var endpoint = percent * 360;
-
+        debugger;
+        width-=2;
         var d = endpoint,
             dr = d - 90,
             radians = Math.PI * (dr) / 180,
@@ -507,7 +520,7 @@ export class TechRadar {
             'stroke-opacity': animation? 0 : maxOpacity/100,
             strokeWidth: width,
         });
-
+console.log("width:"+width);
         if (animation) {
             Snap.animate(0, maxOpacity, function (val) {
                 arc.attr({
@@ -661,7 +674,7 @@ export class TechRadar {
              strokeWidth: 1,
              fill: "none",
                      stroke: "#AAAAAA",
-                   //  strokeLinecap: "round",
+                     strokeLinecap: "round",
                         filter: f,
             });
             this.layer0.add(c);
@@ -671,13 +684,10 @@ export class TechRadar {
         var rotSum = 0;
         for (var i = 0; i < slicesLength; i++) {
             var rot = this.radarDefinition.config.slices[i].perc * 360 / 100;
-            var f = this.s.filter(Snap.filter.blur(0.1, 0.1));
+            
             var line = this.s.paper.line(this.centre.x, this.centre.y, this.centre.x, this.centre.y - _this.radius -100).attr(
                 {
-                     strokeWidth: 1,
                      stroke: "#AAAAAA",
-                    // strokeLinecap: "round",
-                     filter: f
                 });
             line.transform('r' + rotSum + ',' + this.centre.x + ',' + this.centre.y);
             this.layer1.add(line);
