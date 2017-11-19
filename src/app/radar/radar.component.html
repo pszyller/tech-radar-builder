@@ -4,41 +4,29 @@
 
 
 
-
 <div *ngIf="uid">
-  <div id="main-header">
 
-
-    <div id="title-heading" class="pagetitle with-breadcrumbs">
-
-      <div id="breadcrumb-section">
+  <div class="navbar navbar-default navbar-fixed-top">
+      <div id="main-header" class="with-breadcrumbs">{{ radarDefinition ? radarDefinition.config.title : "..."}}</div>
+    <div class="container">
+      <div class="navbar-header">
+        <a href="../" class="navbar-brand">tech-radar-builder</a>
+        <button class="navbar-toggle collapsed" type="button" data-toggle="collapse" data-target="#navbar-main" aria-expanded="false">
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+        </button>
       </div>
-
-
-
-      <h1 id="title-text" class="with-breadcrumbs">{{ radarDefinition ? radarDefinition.config.title : "..."}}</h1>
-
-    </div>
-  </div>
-
-  <nav class="navbar navbar-default">
-    <div class="container-fluid">
-
-      <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
+      <div class="navbar-collapse collapse" id="navbar-main" aria-expanded="false" style="height: 1px;">
         <ul class="nav navbar-nav navbar-left" *ngIf="readOnlyRadar">
           <li>
             <a href="#" (click)="closeReadOnlyRadar()">Close</a>
           </li>
         </ul>
-
-        <ul *ngIf="!readOnlyRadar" class="nav navbar-nav" style="background-color: transparent">
-          <!--<li class="active"><a href="#">Add <span class="sr-only">(current)</span></a></li>
-<li><a href="#">Link</a></li>-->
+        <ul class="nav navbar-nav" *ngIf="!readOnlyRadar">
           <li class="dropdown">
-            <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-expanded="false">Radars
-              <span class="caret"></span>
-            </a>
-            <ul class="dropdown-menu" role="menu">
+            <a class="dropdown-toggle" data-toggle="dropdown" href="#" id="themes">Radars <span class="caret"></span></a>
+            <ul class="dropdown-menu" aria-labelledby="themes">
               <li *ngFor="let item of radars">
                 <a href="#" (click)="changeRadar(item)">{{item.config.title}}</a>
               </li>
@@ -46,28 +34,26 @@
                 <a href="#" (click)="configureClick(true)" style="margin-top:5px">New radar</a>
               </li>
             </ul>
+          </li>
 
+          <li *ngIf="firebaseService.isAuth && radars.length > 0">
+            <a href="#" (click)="showLegend=!showLegend">Legend</a>
           </li>
           <li *ngIf="firebaseService.isAuth && radars.length > 0">
             <a href="#" (click)="editClick()">Edit</a>
           </li>
-          <li *ngIf="firebaseService.isAuth && radars.length > 0">
-            <a href="#" (click)="showLegend=!showLegend">Legend</a>
-          </li>
+
         </ul>
-
-
-
-        <ul *ngIf="loaded && !this.viewSettings.readOnly && !readOnlyRadar && radars.length > 0" class="nav navbar-nav navbar-left">
+ <ul *ngIf="loaded && !this.viewSettings.readOnly && !readOnlyRadar && radars.length > 0" class="nav navbar-nav navbar-left">
           <li>
             <a href="#" data-toggle="modal" data-target="#sureModal">Delete</a>
           </li>
           <li>
             <a href="#" (click)="configureClick()">Configure</a>
           </li>
-          <li>
+          <!-- <li>
             <a href="#" id='addItemBtn' (click)="addItemClick();" data-toggle="modal" data-target="#myModal" *ngIf="radarDefinition.config.title.length > 0">Add Item</a>
-          </li>
+          </li> -->
         </ul>
 
 
@@ -82,9 +68,11 @@
             <a href="#" (click)="signOut()">Sign out [{{userDisplayName}}]</a>
           </li>
         </ul>
+
+
       </div>
     </div>
-  </nav>
+  </div>
 
   <div *ngIf='showLegend' class="legend">
     <div *ngFor="let di of getRadarItems();let b = index;">
@@ -136,11 +124,11 @@
                       <strong> {{ histItem.date | date: 'dd/MM/yyyy' }}</strong>
                       {{ histItem.log }}
                     </div>
-                   
+
                   </div>
                 </div>
               </div>
-           
+
             </div>
             <hr>
           </div>
@@ -175,7 +163,20 @@
                 <div class="form-group">
                   <label for="inputEmail" class="col-lg-2 control-label">Title</label>
                   <div class="col-lg-10">
-                    <input type="text" class="form-control" name="newItemTitle" [(ngModel)]="itemWorkingCopy.title" id="title" placeholder="Title">
+                    <input type="text" required maxlength="40" class="form-control" name="newItemTitle" [(ngModel)]="itemWorkingCopy.title" id="title"
+                      placeholder="Title">
+
+                  </div>
+                </div>
+                <div class="form-group">
+                  <label for="alwaysShowLabel"  class="col-lg-2 control-label">Always show title</label>
+                  <div class="col-lg-10">
+
+                    <div class="checkbox">
+                      <label>
+                        <input type="checkbox" [(ngModel)]="itemWorkingCopy.alwaysShowTitle" name="alwaysShowLabel"> (if disabled, label will be shown according to the item size and zoom)
+                      </label>
+                    </div>
                   </div>
                 </div>
                 <div class="form-group">
@@ -196,12 +197,12 @@
 
                   <div class="col-lg-3">
                     <div class="dropdown">
-                      <button class="btn dropdown-toggle btn-primary" style="background-color:transparent;border:none" type="button" id="dropdownMenuButton"
+                      <button class="" style="background-color:transparent;border:none" type="button" id="dropdownMenuButton"
                         data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
                         <img [(src)]="'/assets/svg/'+itemWorkingCopy.shape" style="width:40px;height:40px" />
                       </button>
                       <div class="dropdown-menu" aria-labelledby="dropdownMenuButton">
-                        <a *ngFor="let icon of getIcons()" class="dropdown-item" (click)="selectShape(icon)" href="#">
+                        <a style="margin:10px" *ngFor="let icon of getIcons()" class="dropdown-item" (click)="selectShape(icon)" href="#">
                           <img src="/assets/svg/{{icon}}" style="width:40px;height:40px" />
                         </a>
                       </div>
@@ -218,8 +219,9 @@
                 </div>
                 <div>History</div>
                 <div class="form-group" *ngFor="let histItem of itemWorkingCopy.history; let i = index;trackBy: trackByInd">
-                  <label for="textArea" class="col-lg-2 control-label"> {{ histItem.date | date: 'dd/MM/yyyy HH:mm' }}
-                    <button class="btn btn-primary" type="button" (click)="removeHistoryItem(i)">Remove</button>
+                  <label for="textArea" class="col-lg-2 control-label">
+                    <strong> {{ histItem.date | date: 'dd/MM/yyyy HH:mm' }}</strong>
+                    <a (click)="removeHistoryItem(i)">Remove</a>
                   </label>
 
                   <div class="col-lg-10">
@@ -242,7 +244,7 @@
                   <div class="col-lg-10">
 
                     <div *ngFor="let histItem of itemWorkingCopy.history; let i = index;">
-                      <b>{{ histItem.date | date: 'dd/MM/yyyy HH:mm' }}</b>
+                      <strong>{{ histItem.date | date: 'dd/MM/yyyy HH:mm' }}</strong>
                       <div>{{histItem.log}}</div>
                       <hr/>
                     </div>
@@ -254,8 +256,11 @@
             </form>
           </div>
           <div class="modal-footer">
+            <button type="button" *ngIf="!this.viewSettings.readOnly && newItemMode == 'edit'" class="btn btn-error" style='float:left'
+              data-dismiss="modal" (click)="deleteItem()">Delete Item</button>
             <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
-            <button *ngIf="!this.viewSettings.readOnly" type="button" class="btn btn-primary" (click)="addNewItem()" data-dismiss="modal">Save changes</button>
+            <button *ngIf="!this.viewSettings.readOnly" type="button" [disabled]="!itemWorkingCopy.title || itemWorkingCopy.title.length == 0"
+              class="btn btn-primary" (click)="addNewItem()" data-dismiss="modal">Save changes</button>
           </div>
         </div>
       </div>
@@ -304,7 +309,7 @@
 
                   </div>
                 </div>
-                <div class="form-group">
+                <!-- <div class="form-group">
                   <label for="itemsList" class="col-lg-2 control-label">Items list</label>
                   <div class="col-lg-10">
 
@@ -314,7 +319,8 @@
                       </label>
                     </div>
                   </div>
-                </div>
+                </div> -->
+           
                 <legend>Slices</legend>
                 <div class="row" style="text-align:center">
                   <div class="col-sm-5"></div>
@@ -434,7 +440,7 @@
   <script id="metamorph-1-start" type="text/x-placeholder"></script>
   <script id="metamorph-21-start" type="text/x-placeholder"></script>
 
-  <div *ngIf="loaded && radars.length == 0">
+  <div style="margin-top:20px" *ngIf="loaded && radars.length == 0">
 
     <div class="jumbotron">
       <h1>It's time to create your first Radar.</h1>

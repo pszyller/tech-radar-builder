@@ -48,6 +48,7 @@ export class RadarDataItemDef
     size: number;
     shape: string = "circle.svg";
     color: string = "#FF0000";
+    alwaysShowTitle:boolean;
     x: number;
     y: number;
     history :Array<HistoryItem> = new Array<HistoryItem>();

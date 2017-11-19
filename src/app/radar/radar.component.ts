@@ -93,6 +93,13 @@ export class RadarComponent implements OnInit, AfterViewInit  {
 
   editItem(item: RadarDataItemDef) {
 
+
+    if(!item)
+    {
+      this.addItemClick();
+      return;
+    }
+
     this.newItemMode = 'edit';
     this.editingItem = item;
 
@@ -117,10 +124,6 @@ export class RadarComponent implements OnInit, AfterViewInit  {
 
   addNewItem() {
 
-    let newItem = new RadarDataItemDef();
-    newItem.x = 500;
-    newItem.y = 100;
-
     if (this.newItemMode == 'edit') {
 
       var oldName = this.editingItem.title;
@@ -130,28 +133,41 @@ export class RadarComponent implements OnInit, AfterViewInit  {
       this.editingItem.color = this.itemWorkingCopy.color;
       this.editingItem.history = this.itemWorkingCopy.history;
       this.editingItem.shape = this.itemWorkingCopy.shape;
-
-      this.techRadar.update(this.editingItem, oldName);
+      this.editingItem.alwaysShowTitle = this.itemWorkingCopy.alwaysShowTitle;
+      this.techRadar.update();
       return;
     }
-
+    
+    let newItem = new RadarDataItemDef();
+    newItem.x = 0;
+    newItem.y = 0;
     newItem.title = this.itemWorkingCopy.title;
     newItem.desc = this.itemWorkingCopy.desc;
     newItem.size = this.itemWorkingCopy.size;
     newItem.color = this.itemWorkingCopy.color;
     newItem.shape = this.itemWorkingCopy.shape;
+    newItem.alwaysShowTitle = this.itemWorkingCopy.alwaysShowTitle;
 
-    this.techRadar.add(newItem, newItem.x, newItem.y, null, true);
+    var item = this.techRadar.add(newItem, newItem.x, newItem.y, null, true);
+    this.techRadar.moveToSlice(this.techRadar.currentElem.x, this.techRadar.currentElem.y, item);
+  }
+
+  deleteItem()
+  {
+    this.techRadar.remove(this.editingItem);
   }
 
   changeRadar(radar) {
-
+    this.showLegend = false;
+    this.legendCache = null;
     this.radarDefinition = radar;
     this.createRadar(radar);
+    
   }
 
   createRadar(radar: RadarDefinition, s: number = 1) {
     var self = this;
+    
     this.zone.runOutsideAngular(function () {
       self.techRadar = new TechRadar(radar, s, self.viewSettings.readOnly);
     });
@@ -162,8 +178,8 @@ export class RadarComponent implements OnInit, AfterViewInit  {
       this.legendCache = null;
       this.firebaseService.updateRadar(this.uid, s);
     });
+
     this.techRadar.editItem = (itm) => {
-      
       this.editItem(itm);
     }
   }
@@ -190,6 +206,7 @@ export class RadarComponent implements OnInit, AfterViewInit  {
     }
 
     this.firebaseService.updateRadar(this.uid, this.radarDefinition);
+    this.legendCache = null;
     this.createRadar(this.radarDefinition);
     this.showConfigureModal = false;
   }
@@ -197,6 +214,9 @@ export class RadarComponent implements OnInit, AfterViewInit  {
   addItemClick() {
     this.newItemMode = 'add';
     this.itemWorkingCopy = new RadarDataItemDef();
+    this.zone.run(() => {
+      document.getElementById('itemDetailsBtn').click();
+    });
   }
 
   configureClick(isNew: boolean) {
@@ -296,6 +316,8 @@ export class RadarComponent implements OnInit, AfterViewInit  {
 
     this.firebaseService.deleteRadar(this.uid, this.radarDefinition);
     var svg = document.getElementById('radar');
+    this.legendCache = null;
+    this.showLegend = false;
     if (svg != null)
       svg.remove();
     this.ngOnInit();
