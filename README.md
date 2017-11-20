@@ -22,9 +22,13 @@ So with [**Technology radar builder**](http://tech-radar-builder.azurewebsites.n
 - Easy radar items adding/removing
 - Easy items moving (drag-n-drop)
 - Radars stored in could
-- Configurable stage/ring size (percentage) [todo - ui]
-- [todo] Zoomable/scalable
-- [todo] History
+- Configurable stage/ring size (percentage)
+- Configurable radar items (size, shape, color)
+- Zoomable/scalable
+- Items History
+- [todo] reports generator
+- [todo] roadmap generator
+
 
 ### 3. [Click and create your Radar!](http://tech-radar-builder.azurewebsites.net/)
 
