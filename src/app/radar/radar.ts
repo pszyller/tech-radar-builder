@@ -298,14 +298,15 @@ export class TechRadar {
 
         g.add(c);
 
-
+        var f = this.s.paper.filter(Snap.filter.blur(0.3, 0.23));
         this.loadExternal(item.shape || 'circle.svg', function (d) {
             c.add(d);
             d.attr({
                 fill: item.color,
                 'fill-opacity': 1,
                 stroke: "#FFFFFF",
-                strokeWidth: 0.5,
+                strokeWidth: 0.0,
+                filter:f
             });
             d.transform('s' + item.size / 5);
             g.add(c);

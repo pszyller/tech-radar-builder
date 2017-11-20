@@ -259,10 +259,12 @@ export class RadarComponent implements OnInit, AfterViewInit  {
   }
 
   addStage() {
+    debugger;
     let newStage = new RadarStage();
     newStage.name = "new stage " + (this.workingCopyRadarDefinition.config.stages.length + 1);
     newStage.id = _.max(_.map(this.workingCopyRadarDefinition.config.stages, function (e) { return e.id || 0; })) + 1;
 
+    this.workingCopyRadarDefinition.config.stages.push(newStage);
     this.resetPerc(this.workingCopyRadarDefinition.config.stages, true);
   }
 
