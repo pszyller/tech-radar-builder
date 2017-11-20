@@ -3,6 +3,7 @@ import * as _ from "lodash";
 import { TechRadar } from './radar';
 import { RadarDefinition, RadarDataItemDef, RadarStage, RadarSlice, ScalableItem, ViewSettings, RadarDataItem } from './radar-definition';
 import { FirebaseService } from '../firebase/firebase.service';
+import { debug } from 'util';
 
 
 @Component({
@@ -306,10 +307,14 @@ export class RadarComponent implements OnInit, AfterViewInit  {
   }
 
   editClick() {
+
+    if(this.viewSettings.readOnly)
+    eval("$('#editHelpModal').modal('show')");
+
     this.viewSettings.readOnly = !this.viewSettings.readOnly;
     this.techRadar.readOnly = this.viewSettings.readOnly;
     this.techRadar.create(this.techRadar.size, this.techRadar.radarDefinition);
-    //this.createRadar(this.radars[0]);
+    
 
   }
 

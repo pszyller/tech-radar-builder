@@ -7,7 +7,7 @@
 <div *ngIf="uid">
 
   <div class="navbar navbar-default navbar-fixed-top">
-      <div id="main-header" class="with-breadcrumbs">{{ radarDefinition ? radarDefinition.config.title : "..."}}</div>
+    <div id="main-header" class="with-breadcrumbs">{{ radarDefinition ? radarDefinition.config.title : "..."}}</div>
     <div class="container">
       <div class="navbar-header">
         <a href="../" class="navbar-brand">tech-radar-builder</a>
@@ -25,7 +25,9 @@
         </ul>
         <ul class="nav navbar-nav" *ngIf="!readOnlyRadar">
           <li class="dropdown">
-            <a class="dropdown-toggle" data-toggle="dropdown" href="#" id="themes">Radars <span class="caret"></span></a>
+            <a class="dropdown-toggle" data-toggle="dropdown" href="#" id="themes">Radars
+              <span class="caret"></span>
+            </a>
             <ul class="dropdown-menu" aria-labelledby="themes">
               <li *ngFor="let item of radars">
                 <a href="#" (click)="changeRadar(item)">{{item.config.title}}</a>
@@ -44,7 +46,7 @@
           </li>
 
         </ul>
- <ul *ngIf="loaded && !this.viewSettings.readOnly && !readOnlyRadar && radars.length > 0" class="nav navbar-nav navbar-left">
+        <ul *ngIf="loaded && !this.viewSettings.readOnly && !readOnlyRadar && radars.length > 0" class="nav navbar-nav navbar-left">
           <li>
             <a href="#" data-toggle="modal" data-target="#sureModal">Delete</a>
           </li>
@@ -169,7 +171,7 @@
                   </div>
                 </div>
                 <div class="form-group">
-                  <label for="alwaysShowLabel"  class="col-lg-2 control-label">Always show title</label>
+                  <label for="alwaysShowLabel" class="col-lg-2 control-label">Always show title</label>
                   <div class="col-lg-10">
 
                     <div class="checkbox">
@@ -197,8 +199,8 @@
 
                   <div class="col-lg-3">
                     <div class="dropdown">
-                      <button class="" style="background-color:transparent;border:none" type="button" id="dropdownMenuButton"
-                        data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                      <button class="" style="background-color:transparent;border:none" type="button" id="dropdownMenuButton" data-toggle="dropdown"
+                        aria-haspopup="true" aria-expanded="false">
                         <img [(src)]="'/assets/svg/'+itemWorkingCopy.shape" style="width:40px;height:40px" />
                       </button>
                       <div class="dropdown-menu" aria-labelledby="dropdownMenuButton">
@@ -277,7 +279,6 @@
             <form class="form-horizontal">
               <fieldset>
                 Are you sure ?
-
               </fieldset>
             </form>
           </div>
@@ -288,6 +289,31 @@
         </div>
       </div>
     </div>
+    <div id="editHelpModal" class="modal">
+      <div class="modal-dialog">
+        <div class="modal-content">
+          <div class="modal-header">
+            <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+            <h4 class="modal-title">Edit mode</h4>
+          </div>
+          <div class="modal-body">
+            <form class="form-horizontal">
+              <fieldset>
+                <ul>
+                  <li>Click on the Radar to add new item</li>
+                  <li>Click on the item to edit</li>
+                  <li>Drag items to change the item position or state</li>
+                </ul>
+              </fieldset>
+            </form>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-default" data-dismiss="modal">OK</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
     <!--<textarea rows="10" cols="100">{{json}}</textarea>-->
     <div id="configureModal" [style.display]="showConfigureModal ? 'block' : 'none'" class="modal">
       <div class="modal-dialog">
@@ -320,7 +346,7 @@
                     </div>
                   </div>
                 </div> -->
-           
+
                 <legend>Slices</legend>
                 <div class="row" style="text-align:center">
                   <div class="col-sm-5"></div>
