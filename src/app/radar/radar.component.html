@@ -6,7 +6,7 @@
 
 <div *ngIf="uid">
 
-  <div class="navbar navbar-default navbar-fixed-top">
+  <div id="navbar" *ngIf="this.showNavBar" class="navbar navbar-default navbar-fixed-top">
     <div id="main-header" class="with-breadcrumbs">{{ radarDefinition ? radarDefinition.config.title : "..."}}</div>
     <div class="container">
       <div class="navbar-header">
@@ -39,7 +39,7 @@
           </li>
 
           <li *ngIf="firebaseService.isAuth && radars.length > 0">
-            <a href="#" (click)="showLegend=!showLegend">Legend</a>
+            <a href="#" (click)="showLegend=!showLegend;showNavBar=false">Legend</a>
           </li>
           <li *ngIf="firebaseService.isAuth && radars.length > 0">
             <a href="#" (click)="editClick()">Edit</a>
@@ -76,78 +76,8 @@
     </div>
   </div>
 
-  <div *ngIf='showLegend' class="legend">
-    <div *ngFor="let di of getRadarItems();let b = index;">
-
-      <!-- [style.background-color]="di.color" -->
-      <div class="panel panel-primary">
-        <div class="panel-heading">
-          <h3 class="panel-title"> {{ di.name }}</h3>
-        </div>
-        <div class="panel-body">
-
-          <div *ngFor="let st of di.stages;let y = index;">
-            <strong>
-              {{ st.name }}
-            </strong>
-
-            <div *ngFor="let e of st.elem;let x = index;">
-
-              <div class="row" style="text-align:center">
-                <div class="col-sm-1">
-
-                  <div style="width:40px;">
-                    <div style="float:left">
-                      <svg version="1.1" width="20px" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
-                        <g transform="scale(2) translate(5,5)" [innerHTML]="e.svg | keepHtml">
-
-                        </g>
-                      </svg>
-                    </div>
-                  </div>
-                </div>
-                <div class="col-sm-3">
-                  <div style="float:left">{{ e.title }}</div>
-                </div>
-                <div class="col-sm-8">
-                  <div style="float:left">{{ e.desc}}</div>
-                </div>
-              </div>
-
-              <div *ngIf="e.history && e.history.length > 0">
-                <p>
-                  <a data-toggle="collapse" href="#collapseExample{{y}}{{b}}{{x}}" aria-expanded="false" aria-controls="collapseExample">
-                    History
-                  </a>
-                </p>
-                <div class="collapse" id="collapseExample{{y}}{{b}}{{x}}">
-                  <div>
-                    <div style="margin:10px" class="card card-block" *ngFor="let histItem of e.history; let i = index;">
-                      <strong> {{ histItem.date | date: 'dd/MM/yyyy' }}</strong>
-                      {{ histItem.log }}
-                    </div>
-
-                  </div>
-                </div>
-              </div>
-
-            </div>
-            <hr>
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
 </div>
-
-<!-- <div [style.background-color]="dif.color" style="width:15px;height:15px;float:left" ></div> 
-          
-          {{dif.title}}
-            {{ dif.desc}}
-               
-                </div>  -->
 <div>
-
   <div *ngIf="loaded">
     <a style="" href="#" id='itemDetailsBtn' style="display:none" class="btn btn-primary" data-toggle="modal" data-target="#myModal">t</a>
     <div id="myModal" class="modal">
@@ -488,3 +418,9 @@
 
   </div>
 </div>
+<div id="reportContainer"  *ngIf='showLegend'>
+    <app-report [radarDefinition]="radarDefinition" ></app-report>
+  
+</div>
+<div id="radarContainer"  *ngIf='!showLegend'></div>
+

@@ -24,6 +24,7 @@ export class RadarComponent implements OnInit, AfterViewInit  {
   uid: string;
   radars: Array<RadarDefinition> = [];
   loaded: boolean = false;
+  showNavBar: boolean = true;
   lock: boolean = false;
   firebaseService: FirebaseService;
   json: string = "test";
@@ -55,6 +56,15 @@ export class RadarComponent implements OnInit, AfterViewInit  {
 
     if (!this.uid)
       return;
+
+      var s = this;
+      if (this.screenfull.enabled) 
+      {
+        this.screenfull.onchange(function(a)
+        {
+          s.showNavBar = !s.screenfull.isFullscreen;
+        });
+      };
 
     var l = this.firebaseService.getRadars(this.uid).subscribe(r => {
       l.unsubscribe();
@@ -94,7 +104,7 @@ export class RadarComponent implements OnInit, AfterViewInit  {
 
   editItem(item: RadarDataItemDef) {
 
-
+debugger;
     if(!item)
     {
       this.addItemClick();
@@ -160,7 +170,7 @@ export class RadarComponent implements OnInit, AfterViewInit  {
 
   changeRadar(radar) {
     this.showLegend = false;
-    this.legendCache = null;
+   
     this.radarDefinition = radar;
     this.createRadar(radar);
     
@@ -176,7 +186,7 @@ export class RadarComponent implements OnInit, AfterViewInit  {
 
 
     this.techRadar.addUpdateListener(s => {
-      this.legendCache = null;
+    
       this.firebaseService.updateRadar(this.uid, s);
     });
 
@@ -207,7 +217,7 @@ export class RadarComponent implements OnInit, AfterViewInit  {
     }
 
     this.firebaseService.updateRadar(this.uid, this.radarDefinition);
-    this.legendCache = null;
+    //this.legendCache = null;
     this.createRadar(this.radarDefinition);
     this.showConfigureModal = false;
   }
@@ -320,10 +330,9 @@ export class RadarComponent implements OnInit, AfterViewInit  {
 
   deleteClick() {
 
-
     this.firebaseService.deleteRadar(this.uid, this.radarDefinition);
     var svg = document.getElementById('radar');
-    this.legendCache = null;
+
     this.showLegend = false;
     if (svg != null)
       svg.remove();
@@ -332,9 +341,11 @@ export class RadarComponent implements OnInit, AfterViewInit  {
 
   fullScreenClick()
   {
-  
     if (this.screenfull.enabled) 
-    { this.screenfull.toggle(); };
+    {
+      this.screenfull.toggle();
+      this.showNavBar = !this.screenfull.isFullscreen;
+    };
   }
 
   percChanged(e, ind, arr: Array<ScalableItem>) {
@@ -386,87 +397,7 @@ export class RadarComponent implements OnInit, AfterViewInit  {
 
   getRadarItems1(){return [];}
   
-  legendCache: any;
-  getRadarItems() {
-    if (!this.radarDefinition || !this.radarDefinition.config.slices)
-      return;
 
-    if(this.legendCache)
-    return this.legendCache;
-
-    console.log('updating');
-    var sliceMap = {};
-    var stageMap = {};
-
-    this.radarDefinition.config.slices.forEach(s => {
-      sliceMap[s.id] = s;
-    });
-    this.radarDefinition.config.stages.forEach(s => {
-      sliceMap[s.id] = s;
-    });
-
-    var slices = [];
-
-
-    this.radarDefinition.config.slices.forEach(element => {
-
-      var clone = <any>_.cloneDeep(element);
-
-      clone.stages = [];
-
-      this.radarDefinition.config.stages.forEach(e => {
-        var stclone = <any>_.cloneDeep(e);
-        stclone.elem = [];
-        clone.stages.push(stclone);
-      });
-
-      slices.push(clone);
-
-    });
-
-    this.radarDefinition.data.forEach(element => {
-
-      var s = _.find(slices, function (e: any) {
-        return e.id == element.sliceId;
-      });
-      //  if(!s)return;
-
-      element.data.forEach(el => {
-        if (!s.stages) {
-          
-        }
-        var g = _.find(s.stages, function (e: any) {
-          return e.id == el.stageId;
-        });
-        var newEl = <any>_.cloneDeep(el);
-        g.elem.push(newEl);
-        var self = this;
-        this.zone.runOutsideAngular(function()
-        {
-          var d = self.techRadar.loadSvgFromCache(newEl.shape || 'circle.svg').clone();
-      
-          if (d) {
-            d.attr({
-              fill: el.color,
-              'fill-opacity': 1,
-              stroke: "#FFFFFF",
-              strokeWidth: 0.5,
-            });
-            d.transform('s0.9');
-  
-            newEl.svg =  d.node.outerHTML;
-          }
-          d.remove();
-        });
-
-      });
-
-    });
-
-    this.legendCache = slices;
-    return slices;
-
-  }
 
   ngAfterViewInit()
   {

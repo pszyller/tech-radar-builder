@@ -77,6 +77,8 @@ export class TechRadar {
 
     constructor(radarData, scale, readOnly: boolean) {
 
+console.log('constructor');
+
         this.readOnly = readOnly;
         var radarDefinition: RadarDefinition;
 
@@ -93,25 +95,43 @@ export class TechRadar {
         this.s = Snap().attr(
             {
                 id: 'radar',
+                "xmlns:xlink":"http://www.w3.org/1999/xlink",
                 width: '100%',
                 //      transform: 's' + this.scale,
                 viewBox: "0,0," + this.vbSize + "," + this.vbSize,
             });
 
+            eval("$('#radar').appendTo('#radarContainer')"); 
 
         var _this = this;
+        var movX = 0;
+        var movY = 0;  
+        var movI = false;
+        var to;
         this.s.mousemove(function (ev, x, y, c, b) {
-
+            
             if (_this.currentElem) {
                 _this.currentElem.x = (ev.offsetX * 2000 / window.innerWidth - _this.layerGroup.matrix.e)/ _this.scalar;
                 _this.currentElem.y = (ev.offsetY * 2000 / window.innerWidth - _this.layerGroup.matrix.f)/ _this.scalar;
 
-                console.log('pos:' + (_this.currentElem.x) + ' ' +(_this.currentElem.y));
+                //console.log('pos:' + (_this.currentElem.x) + ' ' +(_this.currentElem.y));
              //   _this.s.circle(ev.offsetX * 2000 / window.innerWidth, ev.offsetY * 2000 / window.innerWidth, 15);
             }
-            console.log('scalar:' + _this.scalar + '  scale:'+ _this.scale);
+            //console.log('scalar:' + _this.scalar + '  scale:'+ _this.scale);
             if (ev.buttons > 0 && !_this.lockRadarMove) {
                 _this.mapMoved = true;
+                console.log("mousemove");
+
+                if(!movI)
+                {
+                    movX +=ev.movementX; 
+                    movY +=ev.movementY;
+                }
+                
+              
+              // _this.layerGroup.node.setAttribute('transform','translate(' + (_this.layerGroup.matrix.e + movX) + ',' + (_this.layerGroup.matrix.f + movY)+ ')');
+
+
                 _this.layerGroup.transform('S' + _this.scalar + ' 0 0 T' + (_this.layerGroup.matrix.e + ev.movementX) + ',' + (_this.layerGroup.matrix.f + ev.movementY));
             }
             else
@@ -124,6 +144,7 @@ export class TechRadar {
             this.s.node.addEventListener("mousewheel", mouseWheelHandler, false);
         }
 
+        var refresh;
         function mouseWheelHandler(ev) {
             ev.preventDefault();
 
@@ -139,11 +160,36 @@ export class TechRadar {
                 else
                     return;
             }
-            console.log('scale: ' + _this.scalar);
+            //console.log('scale: ' + _this.scalar);
 
 
             _this.layerGroup.transform('s' + _this.scalar + ' 0 0 T' + (_this.layerGroup.matrix.e + ev.deltaY) + ',' + (_this.layerGroup.matrix.f + ev.deltaY));
-            _this.create(_this.size, radarData);
+           
+            // todo: delayed created 
+          
+            clearTimeout(refresh);
+            
+            refresh = 
+            setTimeout(function()
+            {
+                var d = eval("$('text[itemText]')")
+                
+                for(var i = 0;i<d.length;i++)
+                {
+           
+                   var size = d[i].getAttribute("size");
+                   var alwaysShow = d[i].getAttribute("alwaysShow");
+                   var show = (alwaysShow || _this.scalar * size > 6) ? "" : "none";
+                   var font = Math.max(12 / _this.scalar, 5) + "px";
+
+                    d[i].style["display"] = show;
+                    d[i].style["font-size"] = font;
+                    
+                }
+
+               // _this.create(_this.size, radarData);
+            }, 100);
+            
         }
 
         this.scale = scale;
@@ -164,6 +210,7 @@ export class TechRadar {
     }
 
     create(size, radarDef) {
+        console.log("create");
         var _this = this;
         var saveTransform = 'S' + this.scalar + ' 0 0 T0,0';
 
@@ -181,7 +228,7 @@ export class TechRadar {
         this.layer1 = this.s.paper.g().attr({ id: "layer1" });
         this.layer2 = this.s.paper.g().attr({ id: "layer2", display: "none" });
         this.layer3 = this.s.paper.g().attr({ id: "layer3", "fill": "transparent", "cursor": "move" });
-        this.layer4 = this.s.paper.g().attr({ id: "layer3", "fill": "transparent", "cursor": "move" });
+        this.layer4 = this.s.paper.g().attr({ id: "layer4", "fill": "transparent", "cursor": "move" });
 
         this.layerGroup.add(this.layer1);
         this.layerGroup.add(this.layer3);
@@ -236,7 +283,7 @@ export class TechRadar {
     {
        _.forEach(this.radarDefinition.data, function(x:RadarDataItem)
        {
-           debugger;
+           
            _.remove(x.data, function(s){ return s == item });
        });
        this.update();
@@ -252,6 +299,7 @@ export class TechRadar {
             dy *= 2000 / window.innerWidth / _this.scalar;
             //_this.itemDescription.attr({ "display": "none" });
 
+            console.log("move");
             if (dx != 0 || dy != 0)
                 moved = true;
             this.attr({
@@ -274,7 +322,7 @@ export class TechRadar {
             if (!moved) {
                 if (_this.editItem) {
 
-                    debugger;
+                    
                     _this.editItem(item);
                     return;
                 }
@@ -297,16 +345,20 @@ export class TechRadar {
         var c = this.s.g(); //this.s.circle(0, 0, item.size);
 
         g.add(c);
+        c.attr({'fill-opacity' : !_this.radarAnimation ? 1 : 0});
 
         var f = this.s.paper.filter(Snap.filter.blur(0.3, 0.23));
         this.loadExternal(item.shape || 'circle.svg', function (d) {
             c.add(d);
+            
+          
+
             d.attr({
                 fill: item.color,
-                'fill-opacity': 1,
+               // 'fill-opacity': 1,
                 stroke: "#FFFFFF",
                 strokeWidth: 0.0,
-                filter:f
+               // filter:f
             });
             d.transform('s' + item.size / 5);
             g.add(c);
@@ -314,14 +366,20 @@ export class TechRadar {
         });
 
         var threshold = _this.scalar * item.size > 6;
-        if (threshold || item.alwaysShowTitle)
-            var ct = this.s.multitext(6 + item.size, 5, item.title, 150, { "font-size": Math.max(12 / _this.scalar, 10) + "px", "fill": this.colorHelper.contrastColor(slice ? slice.color : '#FFFFFF') });
+     //   if (threshold || item.alwaysShowTitle)
+            var ct = this.s.multitext(6 + item.size, 5, item.title, 150, 
+                {
+                    "itemText" : "true",
+                    "size" : item.size,
+                    "alwaysShow" : item.alwaysShowTitle ? "true" : "",
+                    "display" : (threshold || item.alwaysShowTitle) ? "" : "none",
+                    "font-size": Math.max(12 / _this.scalar, 5) + "px", "fill": this.colorHelper.contrastColor(slice ? slice.color : '#FFFFFF') });
 
         if (!_this.radarAnimation)
             g.transform('t' + x + ',' + y);
         g.add(c);
 
-        if (threshold|| item.alwaysShowTitle)
+       // if (threshold|| item.alwaysShowTitle)
             g.add(ct);
 
         g.radarItem = _.cloneDeep(item);
@@ -360,12 +418,26 @@ export class TechRadar {
             }, 1000, mina.bounce);
 
         });
+
+        var nx = (_this.centre.x - (_this.centre.x * 100 / 100)) + (x * 100 / 100);
+        var ny = (_this.centre.y - (_this.centre.y * 100 / 100)) + (y * 100 / 100);
+        g.transform('t' + nx + ',' + ny);
+
         if (_this.radarAnimation) {
-            Snap.animate(0, 100, function (val) {
-                var nx = (_this.centre.x - (_this.centre.x * val / 100)) + (x * val / 100);
-                var ny = (_this.centre.y - (_this.centre.y * val / 100)) + (y * val / 100);
-                g.transform('t' + nx + ',' + ny);
+             
+            setTimeout(function(){
+            Snap.animate(1, 100, function (val) {
+                c.attr({
+                  
+                    'fill-opacity': val/100,
+                   
+                   // filter:f
+                });
+            //     var nx = (_this.centre.x - (_this.centre.x * val / 100)) + (x * val / 100);
+            //     var ny = (_this.centre.y - (_this.centre.y * val / 100)) + (y * val / 100);
+                //g.transform('t' + nx + ',' + ny);
             }, 1000, mina.bounce);
+        }, Math.random() * 1000);
         } else {
 
         }
@@ -375,7 +447,7 @@ export class TechRadar {
   
 
     moveToSlice(x: number, y: number, radarItem :RadarDataItemDef) {
-debugger;
+
         var _this = this;
 
         var slice =
@@ -452,7 +524,7 @@ debugger;
 
         var target = _this.currentElem;
         var stroke = target.e.attr("stroke");
-        debugger;
+        
         var hexColor= _this.colorHelper.rgbStrToHex(stroke);
 
         var isBright = _this.colorHelper.isBright(hexColor);
@@ -509,23 +581,25 @@ debugger;
         var startY = this.centre.y - radius;
         var endpoint = percent * 360;
 
-        width -= 2;
+        //width -= 2;
         var d = endpoint,
             dr = d - 90,
             radians = Math.PI * (dr) / 180,
             endx = this.centre.x + radius * Math.cos(radians),
             endy = this.centre.y + radius * Math.sin(radians),
             largeArc = d > 180 ? 1 : 0,
-            path = "M" + this.centre.x + "," + startY + " A" + radius + "," + radius + " 0 " + largeArc + ",1 " + endx + "," + endy;
+            path = "M" + this.centre.x + "," + startY + " A" + radius + "," + radius + " 0 " + largeArc + ",1 " + Math.round(endx) + "," + Math.round(endy);
 
         arc = this.s.path(path);
+        
+        // console.log("w" +width);
         arc.attr({
             stroke: color,
             fill: 'none',
             'stroke-opacity': animation ? 0 : maxOpacity / 100,
-            strokeWidth: width,
+            strokeWidth: width-2,
         });
-        console.log("width:" + width);
+     //   console.log("width:" + width);
         if (animation) {
             Snap.animate(0, maxOpacity, function (val) {
                 arc.attr({
@@ -608,7 +682,7 @@ debugger;
 
         this.drawRing(slicesLength, _this.radius + (35), 30, function (sliceIndex, elem) {
             var l = elem.getTotalLength();
-            var t1 = _this.s.paper.text((l / 2), 100, _this.radarDefinition.config.slices[sliceIndex].name).attr(
+            var t1 = _this.s.paper.text((l / 2), 0, _this.radarDefinition.config.slices[sliceIndex].name).attr(
                 {
                     textpath: elem,
                     'fill': '#000000', 'stroke': '#000000', 'stroke-width': 0.0,
@@ -622,11 +696,18 @@ debugger;
 
         var rSum = 0;
         for (var i = 0; i < stagesLength; i++) {
+            
             // _this.radius = this.canvasSize / 2.5;
             var ringWidth = _this.radius * (_this.radarDefinition.config.stages[i].perc / 100);
             var shift = ringWidth / 2;
 
-            this.drawRing(slicesLength, _this.radius - (rSum) - shift, ringWidth, function (sliceIndex, elem, elemMirror, elemMirror2) {
+            var x = 0;
+            if(i < stagesLength-1)
+             x = _this.radius - (rSum) - shift;
+             else
+             x= ringWidth - shift;
+
+            this.drawRing(slicesLength, x, ringWidth, function (sliceIndex, elem, elemMirror, elemMirror2) {
                 //oncreated
 
                 var slice = _this.radarDefinition.config.slices[sliceIndex];
@@ -664,7 +745,7 @@ debugger;
                         y: 0
                     };
 
-                    console.log(_this.currentElem.slicei + ' ' + _this.currentElem.stagei);
+                    //console.log(_this.currentElem.slicei + ' ' + _this.currentElem.stagei);
                     current = _this.map[key];
                     current.attr({ 'origStroke': current.attr('stroke') });
                 }
@@ -674,7 +755,7 @@ debugger;
 
                     if (!_this.mapMoved) {
                         if (_this.editItem) {
-                            console.log('add item');
+                            //console.log('add item');
                             if(!_this.readOnly)
                             _this.editItem();
                             return;
@@ -699,7 +780,7 @@ debugger;
                 fill: "none",
                 stroke: "#AAAAAA",
                 strokeLinecap: "round",
-                filter: f,
+                //filter: f,
             });
             this.layer0.add(c);
             rSum += ringWidth;

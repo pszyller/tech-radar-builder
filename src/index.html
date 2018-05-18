@@ -5,7 +5,7 @@
   <meta charset="utf-8">
   <title>tech-radar-builder</title>
   <meta name="description" content="flexible technology radar builder">
-  <meta name="keywords" content="tech-radar, technology, techradar">
+  <meta name="keywords" content="technology radar, tech-radar, technology, techradar">
   <meta name="author" content="Pawel Szyller">
   <base href="/">
 
@@ -24,6 +24,84 @@
         
           <script>
 
+function saveAsPng()
+{
+ 
+  var svg  = document.getElementById('radar');
+  svg.getElementById("group").setAttribute("transform", "matrix(1.6,0,0,1.6,-621,34)");
+  debugger;
+   var d = $('#radar text[itemText]');
+   
+   for(var i = 0;i<d.length;i++)
+                {
+                    
+                   var size = d[i].getAttribute("size");
+                   var alwaysShow = d[i].getAttribute("alwaysShow");
+                   var show = (alwaysShow || 1.6 * size > 6) ? "" : "none";
+                   var font = Math.max(12 / 1.6, 5) + "px";
+
+                    d[i].style["display"] = show;
+                    d[i].style["font-size"] = font;
+                    
+                }
+
+
+
+
+
+
+
+var svgData = new XMLSerializer().serializeToString( svg );
+
+var canvas = document.createElement( "canvas" );
+canvas.width = 2000;
+canvas.height = 2000;
+
+var ctx = canvas.getContext( "2d" );
+ctx.fillStyle = "white";
+ctx.fillRect(0, 0, canvas.width, canvas.height);
+var img = document.createElement( "img" );
+img.setAttribute( "src", "data:image/svg+xml;base64," + btoa( svgData ) );
+
+
+img.onload = function() {
+    ctx.drawImage( img, 0, 0 );
+    var img2 = document.createElement( "img" );
+    img2.setAttribute("style", "width:100%");
+    img2.setAttribute( "src",  canvas.toDataURL( "image/png" ) );
+  document.body.appendChild(img2);
+    
+};
+
+}
+
+function download()
+{
+  var html = $("#radar");
+  // html.find("#layer2").remove();
+  // html.find("#layer3").remove();
+  // html.find("#layer3").remove();
+
+  debugger;
+  var data = JSON.stringify({
+  "Svg":  html[0].outerHTML
+  
+});
+  var xhr = new XMLHttpRequest();
+
+xhr.addEventListener("readystatechange", function () {
+  if (this.readyState === 4) {
+    console.log(this.responseText);
+  }
+});
+
+xhr.open("POST", "http://localhost:53982/api/values/generate");
+xhr.setRequestHeader("content-type", "application/json");
+xhr.setRequestHeader("cache-control", "no-cache");
+xhr.setRequestHeader("postman-token", "e2a8f78e-4591-2870-9f3c-8a0a602dba43");
+
+xhr.send(data);
+}
           </script>
 
 </head>
